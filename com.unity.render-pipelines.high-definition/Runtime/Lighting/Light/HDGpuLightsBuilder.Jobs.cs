@@ -313,8 +313,7 @@ namespace UnityEngine.Rendering.HighDefinition
                 lightData.hierarchicalVarianceScreenSpaceShadowsIndex = -1;
                 lightData.isRayTracedContactShadow = 0.0f;
 
-                // TODO: only apply for real-time lights, but lightComponent.lightmapBakeType is not available outside in built players, Editor only...
-                lightData.affectDynamicGI = lightRenderData.affectDynamicGI ? 1 : 0;
+                lightData.mixedDynamicGI = lightRenderData.mixedDynamicGI ? 1 : 0;
 
                 var distanceToCamera = processedEntity.distanceToCamera;
                 float shadowDistanceFade;
@@ -691,8 +690,8 @@ namespace UnityEngine.Rendering.HighDefinition
 
                 lightData.flareSize = Mathf.Max(lightRenderData.flareSize * Mathf.Deg2Rad, 5.960464478e-8f);
                 lightData.flareFalloff = lightRenderData.flareFalloff;
-                // TODO: only apply for real-time lights, but lightComponent.lightmapBakeType is not available outside in built players, Editor only...
                 lightData.affectDynamicGI = lightRenderData.affectDynamicGI ? 1 : 0;
+                lightData.mixedDynamicGI = lightRenderData.mixedDynamicGI ? 1 : 0;
                 lightData.flareTint = (Vector3)(Vector4)lightRenderData.flareTint;
                 lightData.surfaceTint = (Vector3)(Vector4)lightRenderData.surfaceTint;
 
@@ -716,6 +715,7 @@ namespace UnityEngine.Rendering.HighDefinition
 
                 if (gpuLightType == GPULightType.Directional)
                 {
+                    // TODO: Figure out why we skip it for the dynamic GI light list, as it hits an assert saying we shouldn't cull anything here.
                     if (!skipDirectionalLights)
                     {
                         int outputIndex = index;

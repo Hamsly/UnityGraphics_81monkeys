@@ -40,6 +40,7 @@ namespace UnityEngine.Rendering.HighDefinition
         public int NeighborAxisLength => m_List.GetNeighborAxisLength(m_Index);
         public void SetHitNeighborAxis(ComputeBuffer buffer) => m_List.SetHitNeighborAxis(m_Index, buffer);
         public void SetNeighborAxis(ComputeBuffer buffer) => m_List.SetNeighborAxis(m_Index, buffer);
+        public bool DynamicGIMixedLightsAreBaked() => m_List.DynamicGIMixedLightsAreBaked(m_Index);
 
         public bool AbleToSimulateDynamicGI()
         {

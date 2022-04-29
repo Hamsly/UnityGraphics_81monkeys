@@ -1624,13 +1624,14 @@ namespace UnityEngine.Rendering.HighDefinition
 
         void LightLoopUpdateCullingParameters(ref ScriptableCullingParameters cullingParams, HDCamera hdCamera)
         {
+            var shadowMaxDistance = hdCamera.volumeStack.GetComponent<HDShadowSettings>().maxShadowDistance.value;
 #if UNITY_EDITOR
+            // TODO: Figure out a better way to enable more shadows for punctual lights.
+            // We can't just set it to max value as shadows from directional lights get broken.
             if (!ProbeVolume.preparingMixedLights)
+                shadowMaxDistance *= 2f;
 #endif
-            {
-                var shadowMaxDistance = hdCamera.volumeStack.GetComponent<HDShadowSettings>().maxShadowDistance.value;
-                m_ShadowManager.UpdateCullingParameters(ref cullingParams, shadowMaxDistance);
-            }
+            m_ShadowManager.UpdateCullingParameters(ref cullingParams, shadowMaxDistance);
 
             // In HDRP we don't need per object light/probe info so we disable the native code that handles it.
             cullingParams.cullingOptions |= CullingOptions.DisablePerObjectCulling;

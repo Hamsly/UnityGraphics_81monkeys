@@ -124,6 +124,8 @@ namespace UnityEngine.Rendering.HighDefinition
 
             GeneratePackedNeighborData(neighborBakeDatas, ref probeVolumeAsset, in parameters, hits);
             ClearContent();
+
+            probeVolumeAsset.dynamicGIMixedLightsAreBaked = false;
         }
 
         internal void DebugDrawNeighborhood(ProbeVolumeHandle probeVolume, Camera camera)

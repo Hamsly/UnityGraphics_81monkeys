@@ -47,10 +47,6 @@ namespace UnityEngine.Rendering.HighDefinition
             public bool enableAreaLights;
             [ReadOnly]
             public bool onlyDynamicGI;
-            [ReadOnly]
-            public bool dynamicGIUseRealtimeLights;
-            [ReadOnly]
-            public bool dynamicGIUseMixedLights;
 #if UNITY_EDITOR
             [ReadOnly]
             public bool dynamicGIPreparingMixedLights;
@@ -266,16 +262,13 @@ namespace UnityEngine.Rendering.HighDefinition
                     if (!lightRenderData.affectDynamicGI)
                         return;
 
-                    if (lightRenderData.mixedDynamicGI)
-                    {
-                        if (!dynamicGIUseMixedLights)
-                            return;
-                    }
-                    else
-                    {
-                        if (!dynamicGIUseRealtimeLights)
-                            return;
-                    }
+#if UNITY_EDITOR
+                    // Reject only realtime lights when preparing for mixed lighting baking.
+                    // Mixed lights will be rejected in a shader when required.
+                    if (dynamicGIPreparingMixedLights
+                        && !lightRenderData.mixedDynamicGI)
+                        return;
+#endif
                 }
 
                 if (enableRayTracing && !lightRenderData.includeForRayTracing)
@@ -450,20 +443,6 @@ namespace UnityEngine.Rendering.HighDefinition
             job.onlyDynamicGI = true;
             job.alwaysContributeToLightingWhenAffectsDynamicGI = true;
             job.evaluateShadowStates = false;
-
-#if UNITY_EDITOR
-            if (ProbeVolume.preparingMixedLights)
-            {
-                job.dynamicGIUseRealtimeLights = false;
-                job.dynamicGIUseMixedLights = true;
-            }
-            else
-#endif
-            {
-                var dynamicGIMixedLightMode = hdCamera.frameSettings.probeVolumeDynamicGIMixedLightMode;
-                job.dynamicGIUseRealtimeLights = dynamicGIMixedLightMode != ProbeVolumeDynamicGIMixedLightMode.MixedOnly;
-                job.dynamicGIUseMixedLights = dynamicGIMixedLightMode == ProbeVolumeDynamicGIMixedLightMode.ForceRealtime;
-            }
         }
     }
 }
