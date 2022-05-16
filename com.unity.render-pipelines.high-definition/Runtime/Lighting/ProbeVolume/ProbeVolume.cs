@@ -1306,7 +1306,7 @@ namespace UnityEngine.Rendering.HighDefinition
             for (int i = 0; i < hits.Length; i++)
                 hits[i].mixedLighting = ProbeVolumeDynamicGI.PackEmission(hitRandiance[i]);
 
-            probeVolumeAsset.dynamicGIMixedLightsAreBaked = true;
+            probeVolumeAsset.dynamicGIMixedLightsBaked = true;
             IncrementDataVersion();
             UnityEditor.EditorUtility.SetDirty(probeVolumeAsset);
         }

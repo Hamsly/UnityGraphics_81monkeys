@@ -33,7 +33,7 @@ float _IndirectScale;
 float _MaxAlbedo;
 float _BakedEmissionMultiplier;
 float _MixedLightingMultiplier;
-int _UseMixedLightsAsRealtime;
+int _MixedLightsAsRealtimeEnabled;
 float _RayBias;
 float _InfiniteBounce;
 float _Sharpness;
@@ -74,7 +74,7 @@ float3 BiasLightPositionNearHit(float3 lightPosition, float3 hitPosition)
 
 bool CheckMixedLight(bool mixedDynamicGI)
 {
-    return _UseMixedLightsAsRealtime || !mixedDynamicGI;
+    return _MixedLightsAsRealtimeEnabled || !mixedDynamicGI;
 }
 
 float3 EvaluateDirectLightingAtHit(SurfaceHitData hit)

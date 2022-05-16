@@ -617,7 +617,7 @@ namespace UnityEngine.Rendering.HighDefinition
                 cmd.SetComputeFloatParam(shader, "_IndirectScale", 1f);
                 cmd.SetComputeFloatParam(shader, "_BakedEmissionMultiplier", 0f);
                 cmd.SetComputeFloatParam(shader, "_MixedLightingMultiplier", 0f);
-                cmd.SetComputeIntParam(shader, "_UseMixedLightsAsRealtime", 1);
+                cmd.SetComputeIntParam(shader, "_MixedLightsAsRealtimeEnabled", 1);
                 infBounce = 0f;
 
                 cmd.SetComputeFloatParam(shader, "_RangeBehindCamera", float.MaxValue);
@@ -631,7 +631,7 @@ namespace UnityEngine.Rendering.HighDefinition
 
                 var forceRealtime = mixedLightMode == ProbeVolumeDynamicGIMixedLightMode.ForceRealtime;
                 cmd.SetComputeFloatParam(shader, "_MixedLightingMultiplier", !forceRealtime ? giSettings.indirectMultiplier.value : 0f);
-                cmd.SetComputeIntParam(shader, "_UseMixedLightsAsRealtime", forceRealtime || !probeVolume.DynamicGIMixedLightsAreBaked() ? 1 : 0);
+                cmd.SetComputeIntParam(shader, "_MixedLightsAsRealtimeEnabled", forceRealtime || !probeVolume.DynamicGIMixedLightsBaked() ? 1 : 0);
 
                 infBounce = infiniteBounces ? giSettings.infiniteBounce.value : 0f;
 
