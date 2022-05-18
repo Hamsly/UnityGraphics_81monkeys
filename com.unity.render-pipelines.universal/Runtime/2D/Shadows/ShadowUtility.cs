@@ -123,8 +123,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 tangents.Add(Vector4.zero);
         }
 
+
+
         public static void GenerateShadowMesh(Mesh mesh, Vector3[] shapePath)
         {
+            /// Update Test
             List<Vector3> vertices = new List<Vector3>();
             List<int> triangles = new List<int>();
             List<Vector4> tangents = new List<Vector4>();
