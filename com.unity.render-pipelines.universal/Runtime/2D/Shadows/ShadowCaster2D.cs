@@ -10,9 +10,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
     /// </summary>
     [ExecuteInEditMode]
     [DisallowMultipleComponent]
-    [AddComponentMenu("Rendering/2D/Shadow Caster 2D (Experimental)")]
+    [AddComponentMenu("Rendering/2D/Shadow Caster 2D")]
     public class ShadowCaster2D : ShadowCasterGroup2D
     {
+
+        [SerializeField] float m_Height = 10f;
+        [SerializeField] float m_ZPosition = 0f;
         [SerializeField] bool m_HasRenderer = false;
         [SerializeField] bool m_UseRendererSilhouette = true;
         [SerializeField] bool m_CastsShadows = true;
@@ -22,6 +25,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] int m_ShapePathHash = 0;
         [SerializeField] Mesh m_Mesh;
         [SerializeField] int m_InstanceId;
+        [SerializeField] Texture2D m_ShadowTexture;
+        [SerializeField] Renderer m_SilhouettedRenderer;
 
         internal ShadowCasterGroup2D m_ShadowCasterGroup = null;
         internal ShadowCasterGroup2D m_PreviousShadowCasterGroup = null;
@@ -44,6 +49,29 @@ namespace UnityEngine.Experimental.Rendering.Universal
             get { return m_UseRendererSilhouette && m_HasRenderer;  }
         }
 
+        public bool hasRenderer
+        {
+            get => m_HasRenderer;
+        }
+
+        public Renderer silhouettedRenderer
+        {
+            get => m_SilhouettedRenderer;
+        }
+
+        public float shadowHeight
+        {
+            set { m_Height = value; }
+            get { return m_Height; }
+        }
+
+
+        public Texture2D shadowTexture
+        {
+            set { m_ShadowTexture = value; }
+            get { return m_ShadowTexture; }
+        }
+
         /// <summary>
         /// If true, the shadow casting shape is included as part of the shadow. If false, the shadow casting shape is excluded from the shadow.
         /// </summary>
@@ -51,6 +79,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             set { m_SelfShadows = value; }
             get { return m_SelfShadows; }
+        }
+
+        public Vector3 shadowPosition
+        {
+            get
+            {
+                Vector3 basePos = transform.position;
+                basePos.z = m_ZPosition;
+                return basePos;
+            }
         }
 
         /// <summary>
@@ -91,6 +129,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (renderer != null)
             {
                 bounds = renderer.bounds;
+                m_SilhouettedRenderer = renderer;
             }
 #if USING_PHYSICS2D_MODULE
             else
@@ -140,8 +179,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public void Update()
         {
-            Renderer renderer;
-            m_HasRenderer = TryGetComponent<Renderer>(out renderer);
+            m_HasRenderer = m_SilhouettedRenderer != null;
 
             bool rebuildMesh = LightUtility.CheckForChange(m_ShapePathHash, ref m_PreviousPathHash);
             if (rebuildMesh)
@@ -171,6 +209,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     ShadowCasterGroup2DManager.AddGroup(this);
                 else
                     ShadowCasterGroup2DManager.RemoveGroup(this);
+            }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            foreach (Vector3 p in shapePath)
+            {
+                var point = p + transform.position;
+                Gizmos.DrawLine(point, point + new Vector3(0, shadowHeight, 0));
             }
         }
 

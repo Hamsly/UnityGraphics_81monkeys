@@ -10,7 +10,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private static readonly int k_ShadowStencilGroupID = Shader.PropertyToID("_ShadowStencilGroup");
         private static readonly int k_ShadowIntensityID = Shader.PropertyToID("_ShadowIntensity");
         private static readonly int k_ShadowVolumeIntensityID = Shader.PropertyToID("_ShadowVolumeIntensity");
-        private static readonly int k_ShadowRadiusID = Shader.PropertyToID("_ShadowRadius");
+        private static readonly int k_ShadowHeightID = Shader.PropertyToID("_ShadowHeight");
+        //private static readonly int k_ShadowTextureID = Shader.PropertyToID("_ShadowImage");
+        private static readonly int k_ShadowCenterID = Shader.PropertyToID("_ShadowCenter");
 
         private static RenderTargetHandle[] m_RenderTargets = null;
         public static  uint maxTextureCount { get; private set; }
@@ -107,10 +109,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
             cmdBuffer.SetRenderTarget(renderTexture, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmdBuffer.ClearRenderTarget(true, true, Color.black);  // clear stencil
 
-            var shadowRadius = 1.42f * light.boundingSphere.radius;
+            //var shadowRadius = 1.42f * light.boundingSphere.radius;
 
             cmdBuffer.SetGlobalVector(k_LightPosID, light.transform.position);
-            cmdBuffer.SetGlobalFloat(k_ShadowRadiusID, shadowRadius);
+            
 
             var shadowMaterial = pass.rendererData.GetShadowMaterial(1);
             var removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(1);
@@ -142,7 +144,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
                             if (shadowCaster != null && shadowMaterial != null && shadowCaster.IsShadowedLayer(layerToRender))
                             {
                                 if (shadowCaster.castsShadows)
+                                {
+                                    //cmdBuffer.SetGlobalTexture(k_ShadowTextureID, shadowCaster.shadowTexture);
+                                    cmdBuffer.SetGlobalFloat(k_ShadowHeightID, shadowCaster.shadowHeight);
+                                    Vector4 pos = shadowCaster.shadowPosition;
+                                    cmdBuffer.SetGlobalVector(k_ShadowCenterID, pos);
                                     cmdBuffer.DrawMesh(shadowCaster.mesh, shadowCaster.transform.localToWorldMatrix, shadowMaterial);
+                                }
                             }
                         }
 
@@ -154,7 +162,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                             {
                                 if (shadowCaster.useRendererSilhouette)
                                 {
-                                    var renderer = shadowCaster.GetComponent<Renderer>();
+                                    var renderer = shadowCaster.silhouettedRenderer;
                                     if (renderer != null)
                                     {
                                         if (!shadowCaster.selfShadows)

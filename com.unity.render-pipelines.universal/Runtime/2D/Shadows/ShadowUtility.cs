@@ -135,16 +135,17 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             // Create interior geometry
             int pointCount = shapePath.Length;
-            var inputs = new ContourVertex[2 * pointCount];
+            var inputs = new ContourVertex[pointCount];
             for (int i = 0; i < pointCount; i++)
             {
                 Color extrusionData = new Color(shapePath[i].x, shapePath[i].y, shapePath[i].x, shapePath[i].y);
+                inputs[i] = new ContourVertex() { Position = new Vec3() { X = shapePath[i].x, Y = shapePath[i].y, Z = 0 }, Data = extrusionData };
+                /*
                 int nextPoint = (i + 1) % pointCount;
-                inputs[2 * i] = new ContourVertex() { Position = new Vec3() { X = shapePath[i].x, Y = shapePath[i].y, Z = 0 }, Data = extrusionData };
-
                 extrusionData = new Color(shapePath[i].x, shapePath[i].y, shapePath[nextPoint].x, shapePath[nextPoint].y);
                 Vector2 midPoint = 0.5f * (shapePath[i] + shapePath[nextPoint]);
                 inputs[2 * i + 1] = new ContourVertex() { Position = new Vec3() { X = midPoint.x, Y = midPoint.y, Z = 0}, Data = extrusionData };
+                */
             }
 
             Tess tessI = new Tess();
@@ -171,11 +172,32 @@ namespace UnityEngine.Experimental.Rendering.Universal
             int[] finalTriangles = triangles.ToArray();
             Vector4[] finalTangents = tangents.ToArray();
 
+            float minX = float.PositiveInfinity;
+            float minY = float.PositiveInfinity;
+            float maxX = float.NegativeInfinity;
+            float maxY = float.NegativeInfinity;
+
+            foreach (Vector3 v in finalVertices)
+            {
+                minX = Mathf.Min(minX, v.x);
+                minY = Mathf.Min(minY, v.y);
+                maxX = Mathf.Max(maxX, v.x);
+                maxY = Mathf.Max(maxY, v.y);
+            }
+
+            Vector2[] uvs = new Vector2[finalVertices.Length];
+            for(int i = 0; i < uvs.Length; i++)
+            {
+                uvs[i] = new Vector2(Mathf.InverseLerp(minX, maxX, finalVertices[i].x),
+                                     Mathf.InverseLerp(minY, maxY, finalVertices[i].y));
+            }
+
             mesh.Clear();
             mesh.vertices = finalVertices;
             mesh.triangles = finalTriangles;
             mesh.tangents = finalTangents;
             mesh.colors = finalExtrusion;
+            mesh.uv2 = uvs;
         }
     }
 }
