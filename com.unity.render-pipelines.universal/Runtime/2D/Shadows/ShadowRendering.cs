@@ -13,6 +13,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private static readonly int k_ShadowHeightID = Shader.PropertyToID("_ShadowHeight");
         //private static readonly int k_ShadowTextureID = Shader.PropertyToID("_ShadowImage");
         private static readonly int k_ShadowCenterID = Shader.PropertyToID("_ShadowCenter");
+        private static readonly int k_FalloffRate = Shader.PropertyToID("_FalloffRate");
 
         private static RenderTargetHandle[] m_RenderTargets = null;
         public static  uint maxTextureCount { get; private set; }
@@ -109,10 +110,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
             cmdBuffer.SetRenderTarget(renderTexture, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmdBuffer.ClearRenderTarget(true, true, Color.black);  // clear stencil
 
-            //var shadowRadius = 1.42f * light.boundingSphere.radius;
 
             cmdBuffer.SetGlobalVector(k_LightPosID, light.transform.position);
-            
 
             var shadowMaterial = pass.rendererData.GetShadowMaterial(1);
             var removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(1);
@@ -145,10 +144,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
                             {
                                 if (shadowCaster.castsShadows)
                                 {
-                                    //cmdBuffer.SetGlobalTexture(k_ShadowTextureID, shadowCaster.shadowTexture);
                                     cmdBuffer.SetGlobalFloat(k_ShadowHeightID, shadowCaster.shadowHeight);
                                     Vector4 pos = shadowCaster.shadowPosition;
                                     cmdBuffer.SetGlobalVector(k_ShadowCenterID, pos);
+                                    cmdBuffer.SetGlobalFloat(k_FalloffRate, shadowCaster.fallOffrate);
                                     cmdBuffer.DrawMesh(shadowCaster.mesh, shadowCaster.transform.localToWorldMatrix, shadowMaterial);
                                 }
                             }
@@ -162,13 +161,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
                             {
                                 if (shadowCaster.useRendererSilhouette)
                                 {
-                                    var renderer = shadowCaster.silhouettedRenderer;
-                                    if (renderer != null)
+                                    var renderers = shadowCaster.silhouettedRenderer;
+                                    if (renderers != null)
                                     {
-                                        if (!shadowCaster.selfShadows)
-                                            cmdBuffer.DrawRenderer(renderer, removeSelfShadowMaterial);
-                                        else
-                                            cmdBuffer.DrawRenderer(renderer, shadowMaterial, 0, 1);
+                                        foreach (var renderer in renderers)
+                                        {
+                                            if (renderer != null)
+                                            {
+                                                if (!shadowCaster.selfShadows)
+                                                    cmdBuffer.DrawRenderer(renderer, removeSelfShadowMaterial);
+                                                else
+                                                    cmdBuffer.DrawRenderer(renderer, shadowMaterial, 0, 1);
+                                            }
+                                        }
                                     }
                                 }
                                 else

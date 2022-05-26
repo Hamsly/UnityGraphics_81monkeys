@@ -30,6 +30,7 @@ Shader "Hidden/ShadowGroup2D"
             #pragma fragment frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShadowsShared.hlsl"
 
             struct Attributes
             {
@@ -56,68 +57,51 @@ Shader "Hidden/ShadowGroup2D"
             uniform float3 _LightPos;
             uniform float _ShadowHeight;
             uniform float3 _ShadowCenter;
+            uniform float _FalloffRate;
 
             Varyings vert (Attributes v)
             {
                 Varyings o;
                 float3 vertexWS = TransformObjectToWorld(v.vertex);  // This should be in world space
 
-                float3 lightDir = _LightPos - vertexWS;
+                float3 lightDir;
+                lightDir.xy = _LightPos.xy - vertexWS.xy;
                 lightDir.z = 0;
 
                 float shadowHeightTest = clamp(ceil(_LightPos.z - _ShadowCenter.z), 0, 1);
 
-                float3 relativePosition = _ShadowCenter - _LightPos;
-                float h = sqrt((relativePosition.x * relativePosition.x) + (relativePosition.y * relativePosition.y));
-                float a = max(0, _LightPos.z - (_ShadowCenter.z + _ShadowHeight));
-                float th = acos(a / h);
+                /// Calculate the projection distance of the bottom of the shadow
+                float3 botVert = vertexWS;
+                botVert.z = _ShadowCenter.z;
+                float _BaseOffset = ProjectionDistance(botVert, _LightPos) * botVert.z;
 
-                float _ShadowRadius = max(tan(th) * (_ShadowHeight  + 1),0.001);
-
+                /// Calculate the projection distance of the top of the shadow
+                float3 topVert = botVert;
+                topVert.z += _ShadowHeight;
+                float _ProjectionOffset = ProjectionDistance(topVert, _LightPos) * topVert.z;
 
                 // Start of code to see if this point should be extruded
                 float3 lightDirection = normalize(lightDir);
 
                 float3 worldTangent = TransformObjectToWorldDir(v.tangent.xyz);
-                float sharedShadowTest = saturate(ceil(-dot(lightDirection, worldTangent)));
+                float sharedShadowTest = saturate(ceil(-dot(lightDirection, worldTangent)));  
 
-                
-                //float3 endpoint = vertexWS + (_ShadowRadius * -lightDirection);
+                float3 o1 = (sharedShadowTest * (_ProjectionOffset * -lightDirection));
+                float3 o2 = ((1 - sharedShadowTest) * (_BaseOffset * -lightDirection));
 
-                /*
-                // Start of code to calculate offset
-                float3 vertexWS0 = TransformObjectToWorld(float3(v.extrusion.xy, 0));
-                float3 vertexWS1 = TransformObjectToWorld(float3(v.extrusion.zw, 0));
-                float3 shadowDir0 = vertexWS0 - _LightPos;
-                shadowDir0.z = 0;
-                shadowDir0 = normalize(shadowDir0);
-
-                float3 shadowDir1 = vertexWS1 -_LightPos;
-                shadowDir1.z = 0;
-                shadowDir1 = normalize(shadowDir1);
-
-                float3 shadowDir = normalize(shadowDir0 + shadowDir1);
-                */
-
-
-                float3 sharedShadowOffset = sharedShadowTest * _ShadowRadius * -lightDirection;
-
-                float3 position;
-                position = vertexWS + sharedShadowOffset;
+                float3 position = vertexWS + o1 + o2;
 
                 o.vertex = TransformWorldToHClip(position);
 
                 // RGB - R is shadow value (to support soft shadows), G is Self Shadow Mask, B is No Shadow Mask
-                o.color = (1 - (length(position - _ShadowCenter.xy) / _ShadowRadius)) * shadowHeightTest * clamp(_ShadowRadius,0,1);  // v.color;
+                o.color =  (1 - (length(position - vertexWS.xy) / max(_ProjectionOffset, _FalloffRate))) * shadowHeightTest;  // v.color;
                 o.color.g = 0.5;
                 o.color.b = 0;
 
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 
-
                 float2 shadUV;
                 shadUV = saturate(round((normalize(position - _ShadowCenter) / 2) + 0.5));
-
 
                 o.uv_tex = shadUV;
 
@@ -172,7 +156,7 @@ Shader "Hidden/ShadowGroup2D"
                 o.vertex = TransformObjectToHClip(v.vertex);
 
                 // RGB - R is shadow value (to support soft shadows), G is Self Shadow Mask, B is No Shadow Mask
-                o.color = 1;
+                o.color = 0;// 1;
                 o.color.g = 0.5;
                 o.color.b = 1;
 

@@ -18,7 +18,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private void OnDrawGizmos()
         {
             Gizmos.color = Color.blue;
-            Gizmos.DrawIcon(transform.position, s_IconsPath + s_LightIconFileNames[(int)m_LightType], true);
+
+            Vector3 iconPos = transform.position + new Vector3(0, transform.position.z, 0);
+
+            Gizmos.color = m_Color;
+
+            Vector3 cubeSize = new Vector3(0.1f, transform.position.z, 0);
+            Gizmos.DrawWireCube(Vector3.Lerp(transform.position, iconPos, 0.5f), cubeSize);
+
+            Gizmos.DrawIcon(iconPos, s_IconsPath + s_LightIconFileNames[(int)m_LightType], true, Gizmos.color);
         }
 
         void Reset()

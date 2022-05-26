@@ -85,24 +85,26 @@ namespace UnityEditor.Experimental.Rendering.Universal
         private static class Styles
         {
             public static GUIContent shadowMode = EditorGUIUtility.TrTextContent("Use Renderer Silhouette", "When this and Self Shadows are enabled, the Renderer's silhouette is considered part of the shadow. When this is enabled and Self Shadows disabled, the Renderer's silhouette is excluded from the shadow.");
-            public static GUIContent silhouettedRenderer = EditorGUIUtility.TrTextContent("Silhouetted Renderer", "The Renderer to use for the Silhouette");
+            public static GUIContent silhouettedRenderer = EditorGUIUtility.TrTextContent("Silhouetted Renderers", "The Renderers to use for the Silhouette");
             public static GUIContent selfShadows = EditorGUIUtility.TrTextContent("Self Shadows", "When enabled, the Renderer casts shadows on itself.");
             public static GUIContent castsShadows = EditorGUIUtility.TrTextContent("Casts Shadows", "Specifies if this renderer will cast shadows");
             public static GUIContent height = EditorGUIUtility.TrTextContent("Shadow Height", "The simulated height of the shadow");
             public static GUIContent zPosition = EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
+            public static GUIContent falloffRate = EditorGUIUtility.TrTextContent("Shadow Falloff Min Distance", "The minimum shadow length before falloff begins");
             public static GUIContent texture = EditorGUIUtility.TrTextContent("Shadow Texture", "The texture to apply to the shadow");
             public static GUIContent ShapePath = EditorGUIUtility.TrTextContent("Shadow Path", "The shape path of the Shadow");
             public static GUIContent sortingLayerPrefixLabel = EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
         }
 
         SerializedProperty m_UseRendererSilhouette;
-        SerializedProperty m_SilhouettedRenderer;
+        SerializedProperty m_SilhouettedRenderers;
         SerializedProperty m_CastsShadows;
         SerializedProperty m_SelfShadows;
         SerializedProperty m_ReceivesShadows;
         SerializedProperty m_Height;
         SerializedProperty m_ZPosition;
         SerializedProperty m_ShapePath;
+        SerializedProperty m_FalloffRate;
         //SerializedProperty m_ShadowTexture;
 
 
@@ -112,12 +114,13 @@ namespace UnityEditor.Experimental.Rendering.Universal
         public void OnEnable()
         {
             m_UseRendererSilhouette = serializedObject.FindProperty("m_UseRendererSilhouette");
-            m_SilhouettedRenderer = serializedObject.FindProperty("m_SilhouettedRenderer");
+            m_SilhouettedRenderers = serializedObject.FindProperty("m_SilhouettedRenderers");
             m_SelfShadows = serializedObject.FindProperty("m_SelfShadows");
             m_CastsShadows = serializedObject.FindProperty("m_CastsShadows");
             m_Height = serializedObject.FindProperty("m_Height");
             m_ZPosition = serializedObject.FindProperty("m_ZPosition");
             m_ShapePath = serializedObject.FindProperty("m_ShapePath");
+            m_FalloffRate = serializedObject.FindProperty("m_FalloffRate");
             //m_ShadowTexture = serializedObject.FindProperty("m_ShadowTexture");
 
             m_SortingLayerDropDown = new SortingLayerDropDown();
@@ -174,7 +177,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             ShadowCaster2D shadowCaster = serializedObject.targetObject as ShadowCaster2D;
             serializedObject.Update();
 
-            EditorGUILayout.PropertyField(m_SilhouettedRenderer, Styles.silhouettedRenderer);
+            EditorGUILayout.PropertyField(m_SilhouettedRenderers, Styles.silhouettedRenderer);
 
 
             EditorGUILayout.PropertyField(m_UseRendererSilhouette, Styles.shadowMode);
@@ -184,6 +187,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             EditorGUILayout.PropertyField(m_SelfShadows, Styles.selfShadows);
             EditorGUILayout.PropertyField(m_Height, Styles.height);
             EditorGUILayout.PropertyField(m_ZPosition, Styles.zPosition);
+            EditorGUILayout.PropertyField(m_FalloffRate, Styles.falloffRate);
             //EditorGUILayout.PropertyField(m_ShadowTexture, Styles.texture);
 
             m_SortingLayerDropDown.OnTargetSortingLayers(serializedObject, targets, Styles.sortingLayerPrefixLabel, null);
@@ -263,7 +267,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             for(int i = 0; i < points.Length; i++)
             {
-                float r = i * ((Mathf.PI * 2) / shadowEllipse.points);
+                float r = i * -((Mathf.PI * 2) / shadowEllipse.points);
 
                 float x = Mathf.Cos(r) * shadowEllipse.radius;
                 float y = Mathf.Sin(r) * shadowEllipse.radius * shadowEllipse.ratio;

@@ -13,9 +13,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
     [AddComponentMenu("Rendering/2D/Shadow Caster 2D")]
     public class ShadowCaster2D : ShadowCasterGroup2D
     {
-
-        [SerializeField] float m_Height = 10f;
+        
+        [SerializeField] float m_Height = 1f;
         [SerializeField] float m_ZPosition = 0f;
+        [SerializeField] float m_FalloffRate = 1f;
         [SerializeField] bool m_HasRenderer = false;
         [SerializeField] bool m_UseRendererSilhouette = true;
         [SerializeField] bool m_CastsShadows = true;
@@ -26,7 +27,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] Mesh m_Mesh;
         [SerializeField] int m_InstanceId;
         [SerializeField] Texture2D m_ShadowTexture;
-        [SerializeField] Renderer m_SilhouettedRenderer;
+        [SerializeField] Renderer[] m_SilhouettedRenderers = new Renderer[0];
 
         internal ShadowCasterGroup2D m_ShadowCasterGroup = null;
         internal ShadowCasterGroup2D m_PreviousShadowCasterGroup = null;
@@ -54,9 +55,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
             get => m_HasRenderer;
         }
 
-        public Renderer silhouettedRenderer
+        public Renderer[] silhouettedRenderer
         {
-            get => m_SilhouettedRenderer;
+            get => m_SilhouettedRenderers;
         }
 
         public float shadowHeight
@@ -64,7 +65,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
             set { m_Height = value; }
             get { return m_Height; }
         }
-
+        public float fallOffrate
+        {
+            set { m_FalloffRate = value; }
+            get { return m_FalloffRate; }
+        }
 
         public Texture2D shadowTexture
         {
@@ -129,7 +134,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (renderer != null)
             {
                 bounds = renderer.bounds;
-                m_SilhouettedRenderer = renderer;
+                if (m_SilhouettedRenderers.Length < 1)
+                {
+                    m_SilhouettedRenderers = new Renderer[1];
+                    m_SilhouettedRenderers[0] = renderer;
+                }
             }
 #if USING_PHYSICS2D_MODULE
             else
@@ -179,7 +188,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public void Update()
         {
-            m_HasRenderer = m_SilhouettedRenderer != null;
+            m_HasRenderer = m_SilhouettedRenderers != null;
 
             bool rebuildMesh = LightUtility.CheckForChange(m_ShapePathHash, ref m_PreviousPathHash);
             if (rebuildMesh)
@@ -216,7 +225,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             foreach (Vector3 p in shapePath)
             {
-                var point = p + transform.position;
+                Vector3 pp = p;
+                pp.x *= transform.lossyScale.x;
+                pp.y *= transform.lossyScale.y;
+                pp.y += m_ZPosition;
+
+                var point = pp + transform.position;
                 Gizmos.DrawLine(point, point + new Vector3(0, shadowHeight, 0));
             }
         }
