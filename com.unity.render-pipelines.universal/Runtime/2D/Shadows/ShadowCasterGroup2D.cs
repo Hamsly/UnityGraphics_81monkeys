@@ -14,18 +14,18 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public int GetShadowGroup() { return m_ShadowGroup; }
 
-        public void RegisterShadowCaster2D(ShadowCaster2D shadowCaster2D)
+        public void RegisterShadowCaster2D(ShadowCaster2D shadowMeshCaster2D)
         {
             if (m_ShadowCasters == null)
                 m_ShadowCasters = new List<ShadowCaster2D>();
 
-            m_ShadowCasters.Add(shadowCaster2D);
+            m_ShadowCasters.Add(shadowMeshCaster2D);
         }
 
-        public void UnregisterShadowCaster2D(ShadowCaster2D shadowCaster2D)
+        public void UnregisterShadowCaster2D(ShadowCaster2D shadowMeshCaster2D)
         {
             if (m_ShadowCasters != null)
-                m_ShadowCasters.Remove(shadowCaster2D);
+                m_ShadowCasters.Remove(shadowMeshCaster2D);
         }
     }
 }

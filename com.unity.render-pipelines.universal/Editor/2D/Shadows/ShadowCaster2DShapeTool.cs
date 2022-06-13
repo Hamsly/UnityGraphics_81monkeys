@@ -12,7 +12,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
         protected override IShape GetShape(Object target)
         {
-            return (target as ShadowCaster2D).shapePath.ToPolygon(false);
+            return (target as ShadowMeshCaster2D).shapePath.ToPolygon(false);
         }
 
         protected override void SetShape(ShadowCasterPath shapeEditor, SerializedObject serializedObject)
@@ -28,11 +28,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
             // This is untracked right now...
             serializedObject.ApplyModifiedProperties();
 
-            ShadowCaster2D shadowCaster = target as ShadowCaster2D;
-            if (shadowCaster != null)
+            ShadowMeshCaster2D shadowMeshCaster = target as ShadowMeshCaster2D;
+            if (shadowMeshCaster != null)
             {
-                int hash = LightUtility.GetShapePathHash(shadowCaster.shapePath);
-                shadowCaster.shapePathHash = hash;
+                int hash = LightUtility.GetShapePathHash(shadowMeshCaster.shapePath);
+                shadowMeshCaster.shapePathHash = hash;
             }
         }
     }

@@ -206,7 +206,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (m_Internal.useOffscreenRT)
                 m_Camera.pixelRect = m_Internal.CalculateFinalBlitPixelRect(rtSize.x, rtSize.y);
             else
-                m_Camera.rect = new Rect(0.0f, 0.0f, 1.0f, 1.0f);
+                m_Camera.rect = new Rect(0, 0, 1f, 1f);
 
             // In Cinemachine compatibility mode the control over orthographic size should
             // be given to the virtual cameras, whose orthographic sizes will be corrected to

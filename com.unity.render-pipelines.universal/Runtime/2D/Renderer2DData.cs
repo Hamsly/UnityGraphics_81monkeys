@@ -75,11 +75,17 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField, Reload("Shaders/Utils/Sampling.shader")]
         Shader m_SamplingShader = null;
 
-        [SerializeField, Reload("Shaders/2D/ShadowGroup2D.shader")]
-        Shader m_ShadowGroupShader = null;
+        [FormerlySerializedAs("m_ShadowGroupShader")] [SerializeField, Reload("Shaders/2D/ShadowMeshGroup2D.shader")]
+        Shader m_ShadowMeshGroupShader = null;
+
+        [SerializeField, Reload("Shaders/2D/ShadowSpriteGroup2D.shader")]
+        Shader m_ShadowSpriteGroupShader = null;
 
         [SerializeField, Reload("Shaders/2D/Shadow2DRemoveSelf.shader")]
         Shader m_RemoveSelfShadowShader = null;
+
+        [SerializeField, Reload("Shaders/2D/ShadowPostRender.shader")]
+        Shader m_PostRenderShadowShader = null;
 
         [SerializeField, Reload("Shaders/Utils/FallbackError.shader")]
         Shader m_FallbackErrorShader;
@@ -102,8 +108,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
         internal Shader pointLightVolumeShader => m_PointLightVolumeShader;
         internal Shader blitShader => m_BlitShader;
         internal Shader samplingShader => m_SamplingShader;
-        internal Shader shadowGroupShader => m_ShadowGroupShader;
+        internal Shader shadowMeshGroupShader => m_ShadowMeshGroupShader;
+        internal Shader shadowSpriteGroupShader => m_ShadowSpriteGroupShader;
         internal Shader removeSelfShadowShader => m_RemoveSelfShadowShader;
+        internal Shader postRenderShadowShader => m_PostRenderShadowShader;
         internal PostProcessData postProcessData { get => m_PostProcessData; set { m_PostProcessData = value; } }
         internal TransparencySortMode transparencySortMode => m_TransparencySortMode;
         internal Vector3 transparencySortAxis => m_TransparencySortAxis;
@@ -138,15 +146,42 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             const int totalMaterials = 256;
             if (shadowMaterials == null || shadowMaterials.Length == 0)
-                shadowMaterials = new Material[totalMaterials];
+                shadowMaterials = new Material[(int)ShadowMaterialTypes.Count,totalMaterials];
             if (removeSelfShadowMaterials == null || removeSelfShadowMaterials.Length == 0)
                 removeSelfShadowMaterials = new Material[totalMaterials];
+
+            postRenderShadowMaterial = CoreUtils.CreateEngineMaterial(postRenderShadowShader);
+        }
+
+        public enum ShadowMaterialTypes
+        {
+            MeshShadows,
+            SpriteShadow,
+
+            Count
+        }
+
+        public Shader GetShaderType(ShadowMaterialTypes shadowMaterialType)
+        {
+            switch (shadowMaterialType)
+            {
+                case ShadowMaterialTypes.MeshShadows: return shadowMeshGroupShader;
+                case ShadowMaterialTypes.SpriteShadow: return shadowSpriteGroupShader;
+            }
+
+            return m_FallbackErrorShader;
         }
 
         // transient data
         internal Dictionary<uint, Material> lightMaterials { get; } = new Dictionary<uint, Material>();
-        internal Material[] shadowMaterials { get; private set; }
+        internal Material[,] shadowMaterials { get; private set; }
         internal Material[] removeSelfShadowMaterials { get; private set; }
+
+        private Material postRenderShadowMaterial;
+        internal Material GetPostRenderShadowMaterial()
+        {
+            return postRenderShadowMaterial;
+        }
 
         internal bool isNormalsRenderTargetValid { get; set; }
         internal float normalsRenderTargetScale { get; set; }

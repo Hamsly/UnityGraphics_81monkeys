@@ -13,20 +13,20 @@ namespace UnityEditor.Experimental.Rendering.Universal
     {
         internal Bounds GetBounds()
         {
-            ShadowCaster2D shadowCaster = (ShadowCaster2D)owner;
-            Renderer m_Renderer = shadowCaster.GetComponent<Renderer>();
+            ShadowMeshCaster2D shadowMeshCaster = (ShadowMeshCaster2D)owner;
+            Renderer m_Renderer = shadowMeshCaster.GetComponent<Renderer>();
             if (m_Renderer != null)
             {
                 return m_Renderer.bounds;
             }
             else
             {
-                Collider2D collider = shadowCaster.GetComponent<Collider2D>();
+                Collider2D collider = shadowMeshCaster.GetComponent<Collider2D>();
                 if (collider != null)
                     return collider.bounds;
             }
 
-            return new Bounds(shadowCaster.transform.position, shadowCaster.transform.lossyScale);
+            return new Bounds(shadowMeshCaster.transform.position, shadowMeshCaster.transform.lossyScale);
         }
 
         public override void SetDefaultShape()
@@ -46,11 +46,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
 
 
-    [CustomEditor(typeof(ShadowCaster2D))]
+    [CustomEditor(typeof(ShadowMeshCaster2D))]
     [CanEditMultipleObjects]
-    internal class ShadowCaster2DEditor : PathComponentEditor<ShadowCasterPath>
+    internal class ShadowMeshCaster2DEditor : PathComponentEditor<ShadowCasterPath>
     {
-        [EditorTool("Edit Shadow Caster Shape", typeof(ShadowCaster2D))]
+        [EditorTool("Edit Shadow Caster Shape", typeof(ShadowMeshCaster2D))]
         class ShadowCaster2DShadowCasterShapeTool : ShadowCaster2DShapeTool {};
         class ShadowCaster2DShadowCasterRectangleTool : ShadowCaster2DShapeTool {};
         class ShadowCaster2DShadowCasterEllipseTool : ShadowCaster2DShapeTool {};
@@ -129,10 +129,10 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
         public void ShadowCaster2DSceneGUI()
         {
-            ShadowCaster2D shadowCaster = target as ShadowCaster2D;
+            ShadowMeshCaster2D shadowMeshCaster = target as ShadowMeshCaster2D;
 
-            Transform t = shadowCaster.transform;
-            Vector3[] shape = shadowCaster.shapePath;
+            Transform t = shadowMeshCaster.transform;
+            Vector3[] shape = shadowMeshCaster.shapePath;
             Handles.color = Color.white;
 
             for (int i = 0; i < shape.Length - 1; ++i)
@@ -163,8 +163,8 @@ namespace UnityEditor.Experimental.Rendering.Universal
             {
                 for (int i = 0; i < targets.Length; i++)
                 {
-                    ShadowCaster2D shadowCaster = (ShadowCaster2D)targets[i];
-                    if (shadowCaster.hasRenderer)
+                    ShadowMeshCaster2D shadowMeshCaster = (ShadowMeshCaster2D)targets[i];
+                    if (shadowMeshCaster.hasRenderer)
                         return true;
                 }
             }
@@ -174,14 +174,14 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
         public override void OnInspectorGUI()
         {
-            ShadowCaster2D shadowCaster = serializedObject.targetObject as ShadowCaster2D;
+            ShadowMeshCaster2D shadowMeshCaster = serializedObject.targetObject as ShadowMeshCaster2D;
             serializedObject.Update();
 
             EditorGUILayout.PropertyField(m_SilhouettedRenderers, Styles.silhouettedRenderer);
 
 
             EditorGUILayout.PropertyField(m_UseRendererSilhouette, Styles.shadowMode);
-   
+
 
             EditorGUILayout.PropertyField(m_CastsShadows, Styles.castsShadows);
             EditorGUILayout.PropertyField(m_SelfShadows, Styles.selfShadows);
@@ -303,11 +303,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             shapePathProperty.serializedObject.ApplyModifiedProperties();
 
-            ShadowCaster2D shadowCaster = target as ShadowCaster2D;
-            if (shadowCaster != null)
+            ShadowMeshCaster2D shadowMeshCaster = target as ShadowMeshCaster2D;
+            if (shadowMeshCaster != null)
             {
-                int hash = LightUtility.GetShapePathHash(shadowCaster.shapePath);
-                shadowCaster.shapePathHash = hash;
+                int hash = LightUtility.GetShapePathHash(shadowMeshCaster.shapePath);
+                shadowMeshCaster.shapePathHash = hash;
             }
         }
     }

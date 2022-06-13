@@ -150,6 +150,7 @@ namespace UnityEngine.Rendering.Universal
         [SerializeField] float m_ShadowDepthBias = 1.0f;
         [SerializeField] float m_ShadowNormalBias = 1.0f;
         [SerializeField] bool m_SoftShadowsSupported = false;
+        [SerializeField] int m_ShadowsSoftness = 2;
 
         // Advanced settings
         [SerializeField] bool m_UseSRPBatcher = true;
@@ -618,6 +619,12 @@ namespace UnityEngine.Rendering.Universal
         {
             get { return m_ShadowDistance; }
             set { m_ShadowDistance = Mathf.Max(0.0f, value); }
+        }
+
+        public int shadowsSoftness
+        {
+            get { return m_ShadowsSoftness; }
+            set { m_ShadowsSoftness = Mathf.Max(0, value); }
         }
 
         /// <summary>

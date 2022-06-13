@@ -38,6 +38,7 @@ Shader "Hidden/ShadowGroup2D"
                 float4 tangent: TANGENT;
                 float2 uv : TEXCOORD0;
                 float2 uv_tex : TEXCOORD1;
+                float2 castable : TEXCOORD2;
                 float4 extrusion : COLOR;
             };
 
@@ -55,55 +56,41 @@ Shader "Hidden/ShadowGroup2D"
 
             //uniform sampler2D _ShadowImage;
             uniform float3 _LightPos;
-            uniform float _ShadowHeight;
             uniform float3 _ShadowCenter;
-            uniform float _FalloffRate;
+            uniform sampler2D _ShadowTexture;
+            float4 _ShadowTexture_ST;
+
 
             Varyings vert (Attributes v)
             {
                 Varyings o;
                 float3 vertexWS = TransformObjectToWorld(v.vertex);  // This should be in world space
 
+                vertexWS.z = _ShadowCenter.z + v.vertex.z;
+
                 float3 lightDir;
                 lightDir.xy = _LightPos.xy - vertexWS.xy;
                 lightDir.z = 0;
 
-                float shadowHeightTest = clamp(ceil(_LightPos.z - _ShadowCenter.z), 0, 1);
+                const float shadowHeightTest = clamp(ceil(_LightPos.z - _ShadowCenter.z), 0, 1);
 
-                /// Calculate the projection distance of the bottom of the shadow
-                float3 botVert = vertexWS;
-                botVert.z = _ShadowCenter.z;
-                float _BaseOffset = ProjectionDistance(botVert, _LightPos) * botVert.z;
-
-                /// Calculate the projection distance of the top of the shadow
-                float3 topVert = botVert;
-                topVert.z += _ShadowHeight;
-                float _ProjectionOffset = ProjectionDistance(topVert, _LightPos) * topVert.z;
+                const float _BaseOffset = ProjectionDistance(vertexWS, _LightPos) * vertexWS.z;
 
                 // Start of code to see if this point should be extruded
-                float3 lightDirection = normalize(lightDir);
+                const float3 lightDirection = normalize(lightDir);
 
-                float3 worldTangent = TransformObjectToWorldDir(v.tangent.xyz);
-                float sharedShadowTest = saturate(ceil(-dot(lightDirection, worldTangent)));  
+                const float3 offset =  (_BaseOffset * -lightDirection);
 
-                float3 o1 = (sharedShadowTest * (_ProjectionOffset * -lightDirection));
-                float3 o2 = ((1 - sharedShadowTest) * (_BaseOffset * -lightDirection));
-
-                float3 position = vertexWS + o1 + o2;
+                const float3 position = vertexWS + offset;
 
                 o.vertex = TransformWorldToHClip(position);
 
                 // RGB - R is shadow value (to support soft shadows), G is Self Shadow Mask, B is No Shadow Mask
-                o.color =  (1 - (length(position - vertexWS.xy) / max(_ProjectionOffset, _FalloffRate))) * shadowHeightTest;  // v.color;
+                o.color = shadowHeightTest;  // v.color;
                 o.color.g = 0.5;
                 o.color.b = 0;
-
+                o.uv_tex = TRANSFORM_TEX(v.uv_tex,_ShadowTexture);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-
-                float2 shadUV;
-                shadUV = saturate(round((normalize(position - _ShadowCenter) / 2) + 0.5));
-
-                o.uv_tex = shadUV;
 
                 return o;
             }
@@ -112,7 +99,7 @@ Shader "Hidden/ShadowGroup2D"
             {
                 float4 main = tex2D(_MainTex, i.uv);
                 float4 col = i.color;
-                col.g = main.a * col.g; //* max(tex2D(_ShadowImage,i.uv_tex).r,0.5);
+                col.g = main.a * col.g * tex2D(_ShadowTexture,i.uv_tex).a;
 
                 return col;
             }

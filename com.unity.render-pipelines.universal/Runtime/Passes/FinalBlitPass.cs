@@ -87,6 +87,11 @@ namespace UnityEngine.Rendering.Universal.Internal
                     cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget,
                         RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, // color
                         RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare); // depth
+
+                    /*
+                    Vector4 scaleBias = new Vector4(1, -1, 0, 1);
+                    cmd.SetGlobalVector(ShaderPropertyId.scaleBias, scaleBias);
+                    */
                     cmd.Blit(m_Source.Identifier(), cameraTarget, m_BlitMaterial);
                 }
                 else

@@ -2,44 +2,41 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+
 
 namespace UnityEngine.Experimental.Rendering.Universal
 {
-    /// <summary>
-    /// Class <c>ShadowCaster2D</c> contains properties used for shadow casting
-    /// </summary>
-    [ExecuteInEditMode]
-    [DisallowMultipleComponent]
-    [AddComponentMenu("Rendering/2D/Shadow Caster 2D")]
     public class ShadowCaster2D : ShadowCasterGroup2D
     {
-        
-        [SerializeField] float m_Height = 1f;
-        [SerializeField] float m_ZPosition = 0f;
-        [SerializeField] float m_FalloffRate = 1f;
-        [SerializeField] bool m_HasRenderer = false;
-        [SerializeField] bool m_UseRendererSilhouette = true;
+        [SerializeField] protected Renderer[] m_SilhouettedRenderers = new Renderer[0];
+        [SerializeField] protected bool m_HasRenderer = false;
+        [SerializeField] protected bool m_UseRendererSilhouette = true;
+        [SerializeField] protected float m_ZPosition = 0f;
+        [SerializeField] protected int m_InstanceId;
         [SerializeField] bool m_CastsShadows = true;
         [SerializeField] bool m_SelfShadows = false;
         [SerializeField] int[] m_ApplyToSortingLayers = null;
-        [SerializeField] Vector3[] m_ShapePath = null;
-        [SerializeField] int m_ShapePathHash = 0;
-        [SerializeField] Mesh m_Mesh;
-        [SerializeField] int m_InstanceId;
-        [SerializeField] Texture2D m_ShadowTexture;
-        [SerializeField] Renderer[] m_SilhouettedRenderers = new Renderer[0];
+        [SerializeField] Renderer2DData.ShadowMaterialTypes m_materialType = Renderer2DData.ShadowMaterialTypes.MeshShadows;
+
+        int m_PreviousShadowGroup = 0;
+        bool m_PreviousCastsShadows = true;
 
         internal ShadowCasterGroup2D m_ShadowCasterGroup = null;
         internal ShadowCasterGroup2D m_PreviousShadowCasterGroup = null;
 
-        internal Mesh mesh => m_Mesh;
-        internal Vector3[] shapePath => m_ShapePath;
-        internal int shapePathHash { get { return m_ShapePathHash; } set { m_ShapePathHash = value; } }
+        internal static readonly int k_ShadowHeightID = Shader.PropertyToID("_ShadowHeight");
+        internal static readonly int k_ShadowCenterID = Shader.PropertyToID("_ShadowCenter");
+        internal static readonly int k_FalloffRate = Shader.PropertyToID("_FalloffRate");
 
-        int m_PreviousShadowGroup = 0;
-        bool m_PreviousCastsShadows = true;
-        int m_PreviousPathHash = 0;
-
+        /// <summary>
+        /// If true, the shadow casting shape is included as part of the shadow. If false, the shadow casting shape is excluded from the shadow.
+        /// </summary>
+        public bool selfShadows
+        {
+            set { m_SelfShadows = value; }
+            get { return m_SelfShadows; }
+        }
 
         /// <summary>
         /// If selfShadows is true, useRendererSilhoutte specifies that the renderer's sihouette should be considered part of the shadow. If selfShadows is false, useRendererSilhoutte specifies that the renderer's sihouette should be excluded from the shadow
@@ -47,7 +44,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public bool useRendererSilhouette
         {
             set { m_UseRendererSilhouette = value; }
-            get { return m_UseRendererSilhouette && m_HasRenderer;  }
+            get { return m_UseRendererSilhouette && m_HasRenderer; }
+        }
+
+        /// <summary>
+        /// Specifies if shadows will be cast.
+        /// </summary>
+        public bool castsShadows
+        {
+            set { m_CastsShadows = value; }
+            get { return m_CastsShadows; }
         }
 
         public bool hasRenderer
@@ -60,49 +66,24 @@ namespace UnityEngine.Experimental.Rendering.Universal
             get => m_SilhouettedRenderers;
         }
 
-        public float shadowHeight
-        {
-            set { m_Height = value; }
-            get { return m_Height; }
-        }
-        public float fallOffrate
-        {
-            set { m_FalloffRate = value; }
-            get { return m_FalloffRate; }
-        }
-
-        public Texture2D shadowTexture
-        {
-            set { m_ShadowTexture = value; }
-            get { return m_ShadowTexture; }
-        }
-
-        /// <summary>
-        /// If true, the shadow casting shape is included as part of the shadow. If false, the shadow casting shape is excluded from the shadow.
-        /// </summary>
-        public bool selfShadows
-        {
-            set { m_SelfShadows = value; }
-            get { return m_SelfShadows; }
-        }
-
-        public Vector3 shadowPosition
+        protected Vector3 shadowPosition
         {
             get
             {
-                Vector3 basePos = transform.position;
-                basePos.z = m_ZPosition;
-                return basePos;
+                var pos = transform.position;
+                return new Vector3(pos.x, pos.y, m_ZPosition);
             }
         }
 
-        /// <summary>
-        /// Specifies if shadows will be cast.
-        /// </summary>
-        public bool castsShadows
+        public Renderer2DData.ShadowMaterialTypes materialType
         {
-            set { m_CastsShadows = value; }
-            get { return m_CastsShadows; }
+            get => m_materialType;
+            protected set => m_materialType = value;
+        }
+
+        internal bool IsShadowedLayer(int layer)
+        {
+            return m_ApplyToSortingLayers != null ? Array.IndexOf(m_ApplyToSortingLayers, layer) >= 0 : false;
         }
 
         static int[] SetDefaultSortingLayers()
@@ -118,81 +99,33 @@ namespace UnityEngine.Experimental.Rendering.Universal
             return allLayers;
         }
 
-        internal bool IsShadowedLayer(int layer)
-        {
-            return m_ApplyToSortingLayers != null ? Array.IndexOf(m_ApplyToSortingLayers, layer) >= 0 : false;
-        }
-
-        private void Awake()
+        protected void Awake()
         {
             if (m_ApplyToSortingLayers == null)
                 m_ApplyToSortingLayers = SetDefaultSortingLayers();
-
-            Bounds bounds = new Bounds(transform.position, Vector3.one);
-
-            Renderer renderer = GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                bounds = renderer.bounds;
-                if (m_SilhouettedRenderers.Length < 1)
-                {
-                    m_SilhouettedRenderers = new Renderer[1];
-                    m_SilhouettedRenderers[0] = renderer;
-                }
-            }
-#if USING_PHYSICS2D_MODULE
-            else
-            {
-                Collider2D collider = GetComponent<Collider2D>();
-                if (collider != null)
-                    bounds = collider.bounds;
-            }
-#endif
-            Vector3 inverseScale = Vector3.zero;
-            Vector3 relOffset = transform.position;
-
-            if (transform.lossyScale.x != 0 && transform.lossyScale.y != 0)
-            {
-                inverseScale = new Vector3(1 / transform.lossyScale.x, 1 / transform.lossyScale.y);
-                relOffset = new Vector3(inverseScale.x * -transform.position.x, inverseScale.y * -transform.position.y);
-            }
-
-            if (m_ShapePath == null || m_ShapePath.Length == 0)
-            {
-                m_ShapePath = new Vector3[]
-                {
-                    relOffset + new Vector3(inverseScale.x * bounds.min.x, inverseScale.y * bounds.min.y),
-                    relOffset + new Vector3(inverseScale.x * bounds.min.x, inverseScale.y * bounds.max.y),
-                    relOffset + new Vector3(inverseScale.x * bounds.max.x, inverseScale.y * bounds.max.y),
-                    relOffset + new Vector3(inverseScale.x * bounds.max.x, inverseScale.y * bounds.min.y),
-                };
-            }
         }
 
         protected void OnEnable()
         {
-            if (m_Mesh == null || m_InstanceId != GetInstanceID())
+            if (m_InstanceId != GetInstanceID())
             {
-                m_Mesh = new Mesh();
-                ShadowUtility.GenerateShadowMesh(m_Mesh, m_ShapePath);
                 m_InstanceId = GetInstanceID();
             }
 
             m_ShadowCasterGroup = null;
         }
 
-        protected void OnDisable()
-        {
-            ShadowCasterGroup2DManager.RemoveFromShadowCasterGroup(this, m_ShadowCasterGroup);
-        }
-
         public void Update()
         {
-            m_HasRenderer = m_SilhouettedRenderers != null;
+            if (m_SilhouettedRenderers != null)
+            {
+                m_HasRenderer = m_SilhouettedRenderers.Length > 0;
+            }
+            else
+            {
+                m_HasRenderer = false;
+            }
 
-            bool rebuildMesh = LightUtility.CheckForChange(m_ShapePathHash, ref m_PreviousPathHash);
-            if (rebuildMesh)
-                ShadowUtility.GenerateShadowMesh(m_Mesh, m_ShapePath);
 
             m_PreviousShadowCasterGroup = m_ShadowCasterGroup;
             bool addedToNewGroup = ShadowCasterGroup2DManager.AddToShadowCasterGroup(this, ref m_ShadowCasterGroup);
@@ -221,27 +154,26 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
         }
 
-        private void OnDrawGizmosSelected()
+        public virtual void CastShadows(CommandBuffer cmdBuffer,int layerToRender,Light2D light,Material material)
         {
-            foreach (Vector3 p in shapePath)
-            {
-                Vector3 pp = p;
-                pp.x *= transform.lossyScale.x;
-                pp.y *= transform.lossyScale.y;
-                pp.y += m_ZPosition;
+        }
 
-                var point = pp + transform.position;
-                Gizmos.DrawLine(point, point + new Vector3(0, shadowHeight, 0));
+        public virtual void ExcludeSilhouettes(CommandBuffer cmdBuffer,int layerToRender,Material material)
+        {
+            if (useRendererSilhouette && IsShadowedLayer(layerToRender))
+            {
+                var renderers = silhouettedRenderer;
+                if (renderers != null)
+                {
+                    foreach (var currentRenderer in renderers)
+                    {
+                        if (currentRenderer != null)
+                        {
+                            cmdBuffer.DrawRenderer(currentRenderer, material);
+                        }
+                    }
+                }
             }
         }
-
-#if UNITY_EDITOR
-        void Reset()
-        {
-            Awake();
-            OnEnable();
-        }
-
-#endif
     }
 }
