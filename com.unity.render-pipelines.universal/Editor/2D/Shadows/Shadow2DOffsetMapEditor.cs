@@ -6,11 +6,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Text;
 using PlasticGui;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering.Universal;
 using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 using UnityEngine.Tilemaps;
@@ -50,6 +52,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         private Vector2Int _imageCursorPosStart;
         private Vector2 _viewSize;
         private Rect _groupRect;
+        [SerializeField] private Sprite _sourceSprite = null;
         [SerializeField] private Texture2D _sourceTexture = null;
         [SerializeField] private Texture2D _workingTexture = null;
         [SerializeField] private Texture2D _previewTexture = null;
@@ -71,8 +74,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
         [SerializeField] private int xLockPosition = -1;
         [SerializeField] private int yLockPosition = -1;
-
-        [SerializeField] private ShadowOffsetMapDictionary shadowOffsetMapDictionary;
 
         [SerializeField] private float previewAlpha = 0.5f;
         private Material _previewMaterial;
@@ -119,13 +120,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
         private void Awake()
         {
             SelectInitialTexture();
-
-            var guids = AssetDatabase.FindAssets("t:ShadowOffsetMapDictionary");
-            if (guids.Length > 0)
-            {
-                shadowOffsetMapDictionary =
-                    AssetDatabase.LoadAssetAtPath<ShadowOffsetMapDictionary>(AssetDatabase.GUIDToAssetPath(guids[0]));
-            }
         }
 
         /// <summary>
@@ -267,7 +261,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         /// </summary>
         private void SelectInitialTexture()
         {
-            if (_sourceTexture != null || shadowOffsetMapDictionary == null)
+            if (_sourceTexture != null)
             {
                 return;
             }
@@ -307,7 +301,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             _requireReCenter = true;
             _imageHash = _sourceTexture.imageContentsHash;
 
-            _workingTexture = shadowOffsetMapDictionary.GetShadowTexture(_sourceTexture);
+            //_workingTexture = shadowOffsetMapDictionary.GetShadowTexture(_sourceTexture);
 
             xLockPosition = -1;
             yLockPosition = -1;
@@ -333,7 +327,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             DrawTopBar(position.width,HeaderSize);
 
-            if (_sourceTexture != null && shadowOffsetMapDictionary != null)
+            if (_sourceTexture != null)
             {
                 if (_sourceTexture.imageContentsHash != _imageHash)
                 {
@@ -986,37 +980,184 @@ namespace UnityEditor.Experimental.Rendering.Universal
             EditorGUILayout.LabelField("Source Texture:");
 
             //If there is no current shadowOffsetMapDictionary, do no allow the user to select a texture
-            if (shadowOffsetMapDictionary != null)
+
+            var prev = _sourceSprite;
+            _sourceSprite = (Sprite)EditorGUILayout.ObjectField(_sourceSprite, typeof(Sprite), true);
+
+            if (prev != _sourceSprite)
             {
-                _sourceTexture = (Texture2D)EditorGUILayout.ObjectField(_sourceTexture, typeof(Texture2D), true);
+                _sourceTexture = null;
+                _workingTexture = null;
 
-                if (_workingTexture == null && _sourceTexture != null)
+                if (_sourceSprite != null)
                 {
-                    if (GUILayout.Button("Generate Working Texture"))
-                    {
-                        _workingTexture = ShadowOffsetMapDictionary.GenerateNewWorkingTexture(_sourceTexture);
-
-                        // Register the texture pair in the dictionary
-                        shadowOffsetMapDictionary.AddShadowTexPair(_sourceTexture, _workingTexture);
-                    }
-                }
-                else
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    previewAlpha = EditorGUILayout.Slider("Preview Alpha:", previewAlpha, 0, 1);
-                    _previewContrast = EditorGUILayout.Slider("Preview Contrast", _previewContrast,0,10);
-                    EditorGUILayout.EndHorizontal();
+                    Debug.Log("Source Sprite Change");
+                    _sourceTexture = _sourceSprite.texture;
+                    _workingTexture = SpriteGetOffsetTexture(_sourceSprite);
                 }
             }
-            else
+
+
+            if (_workingTexture == null && _sourceTexture != null)
             {
-                shadowOffsetMapDictionary = (ShadowOffsetMapDictionary)EditorGUILayout.ObjectField(shadowOffsetMapDictionary, typeof(ShadowOffsetMapDictionary), false);
+                if (GUILayout.Button("Generate Working Texture"))
+                {
+                    _workingTexture = GenerateNewWorkingTexture(_sourceSprite);
+
+                }
             }
+            else if (_workingTexture != null)
+            {
+                EditorGUILayout.BeginHorizontal();
+                previewAlpha = EditorGUILayout.Slider("Preview Alpha:", previewAlpha, 0, 1);
+                _previewContrast = EditorGUILayout.Slider("Preview Contrast", _previewContrast,0,10);
+                EditorGUILayout.EndHorizontal();
+            }
+
 
             EditorGUILayout.EndVertical();
         }
 
+        private Texture2D SpriteGetOffsetTexture(Sprite sourceSprite)
+        {
+            var sourceSpritePath = AssetDatabase.GetAssetPath(sourceSprite);
+            TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(sourceSpritePath);
 
+            if (importer == null) return null;
+
+            var secondarySpriteTextures = importer.secondarySpriteTextures;
+
+            if (secondarySpriteTextures == null) return null;
+
+            foreach (var secTex in secondarySpriteTextures)
+            {
+                if (secTex.name == "_OffsetMap")
+                {
+                    return secTex.texture;
+                }
+            }
+
+            return null;
+        }
+
+        private bool SpriteSetOffsetTexture(Sprite sourceSprite,Texture2D offsetTexture)
+        {
+            var sourceSpritePath = AssetDatabase.GetAssetPath(sourceSprite);
+            TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(sourceSpritePath);
+
+            if (importer == null) return false;
+
+            var secondarySpriteTextures = importer.secondarySpriteTextures;
+
+            if (secondarySpriteTextures == null) return false;
+
+            int index = -1;
+            for (int i = 0; i < secondarySpriteTextures.Length; i++)
+            {
+                var secTex = secondarySpriteTextures[i];
+                if (secTex.name == "_OffsetMap")
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index == -1)
+            {
+                var newSecondarySpriteTexture = new SecondarySpriteTexture();
+                newSecondarySpriteTexture.name = "_OffsetMap";
+                newSecondarySpriteTexture.texture = offsetTexture;
+
+                var secondarySpriteTextureList = new List<SecondarySpriteTexture>(secondarySpriteTextures);
+                secondarySpriteTextureList.Add(newSecondarySpriteTexture);
+
+                importer.secondarySpriteTextures = secondarySpriteTextureList.ToArray();
+            }
+            else
+            {
+                secondarySpriteTextures[index].texture = offsetTexture;
+                importer.secondarySpriteTextures = secondarySpriteTextures;
+            }
+
+            AssetDatabase.ImportAsset(sourceSpritePath,ImportAssetOptions.ForceUpdate);
+            return true;
+        }
+
+        private Texture2D GenerateNewWorkingTexture(Sprite sourceSprite)
+        {
+            if (AssertAssetFolder("Assets/Textures/ShadowOffsetMaps"))
+            {
+                var sourceTexture = sourceSprite.texture;
+
+                var newTexture = new Texture2D(sourceTexture.width, sourceTexture.height);
+                if (SpriteSetOffsetTexture(sourceSprite, newTexture))
+                {
+                    var pixels = newTexture.GetPixels();
+                    for (var i = 0; i < pixels.Length; i++)
+                    {
+                        pixels[i] = new Color(0.5f, 0f, 0.5f, 1);
+                    }
+
+                    newTexture.SetPixels(pixels);
+                    newTexture.Apply();
+
+                    var newPath = AssetDatabase.GenerateUniqueAssetPath("Assets/Textures/ShadowOffsetMaps/SOM_" +
+                                                                        sourceTexture.name + ".renderTexture");
+                    AssetDatabase.CreateAsset(newTexture, newPath);
+
+                    return newTexture;
+                }
+                else
+                {
+                    EditorUtility.DisplayDialog("Cannot Generate Working Texture!",
+                        "Failed to add offset map to this asset.\n\n" +
+                        "This can happen with built in assets. " +
+                        "Please ensure that the asset you are editing" +
+                        " can be opened in the Sprite Editor.",
+                        "Ok");
+                }
+            }
+
+            return null;
+        }
+
+        private bool AssertAssetFolder(string path)
+        {
+            try
+            {
+                if (AssetDatabase.IsValidFolder(path)) return true;
+
+                List<string> pathElements = new List<string>(path.Split('/'));
+
+                if (pathElements.Count <= 0)
+                {
+                    throw new Exception("Path must not be empty");
+                }
+
+                if (pathElements[0] != "Assets")
+                {
+                    pathElements.Insert(0,"Assets");
+                }
+
+                string currentString = pathElements[0];
+
+                for (int i = 1; i < pathElements.Count; i++)
+                {
+                    string nextString = pathElements[i];
+                    if (!AssetDatabase.IsValidFolder(currentString + "/" + nextString))
+                    {
+                        AssetDatabase.CreateFolder(currentString, nextString);
+                    }
+                    currentString += "/" + nextString;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            return AssetDatabase.IsValidFolder(path);
+        }
 
         /// <summary>
         /// Draw the workspace for painting textures

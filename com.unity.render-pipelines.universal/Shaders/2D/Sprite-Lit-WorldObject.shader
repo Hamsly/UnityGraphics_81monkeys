@@ -5,7 +5,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
         _MainTex("Diffuse", 2D) = "white" {}
         _MaskTex("Mask", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}
-        _HeightMap("Height Map", 2D) = "black" {}
+        _OffsetMap("Offset Map", 2D) = "black" {}
 
         // Legacy properties. They're here so that materials using this shader can gracefully fallback to the legacy sprite shader.
         [HideInInspector] _Color("Tint", Color) = (1,1,1,1)
@@ -63,7 +63,8 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
             TEXTURE2D(_MaskTex);
             SAMPLER(sampler_MaskTex);
 
-            sampler2D _HeightMap;
+            TEXTURE2D(_OffsetMap);
+            SAMPLER(sampler_OffsetMap);
 
             half4 _MainTex_ST;
 
@@ -112,7 +113,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 float4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
 
-                float4 hh = tex2D(_HeightMap, i.uv);
+                float4 hh = SAMPLE_TEXTURE2D(_OffsetMap,sampler_OffsetMap, i.uv);
 
                 float xx = ((hh.r * 256) - 128);
                 float yy = ((hh.b * 256) - 128);
