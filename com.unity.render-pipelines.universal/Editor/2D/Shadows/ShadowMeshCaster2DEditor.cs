@@ -215,6 +215,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 {
                     case ShadowShape.Freeform:
                         ShadowCaster2DInspectorGUI<ShadowCaster2DShadowCasterShapeTool>();
+
+                        //if(shadowMeshCaster.TryGetComponent(Ti))
+
                         break;
 
                     case ShadowShape.Rectangle:

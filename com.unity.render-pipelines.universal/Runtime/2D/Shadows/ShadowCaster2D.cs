@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -64,6 +65,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public Renderer[] silhouettedRenderer
         {
             get => m_SilhouettedRenderers;
+        }
+
+        public void AddSilhouettedRenderer(Renderer renderer)
+        {
+            if (!m_SilhouettedRenderers.Contains(renderer))
+            {
+                Array.Resize(ref m_SilhouettedRenderers, m_SilhouettedRenderers.Length + 1);
+                m_SilhouettedRenderers[m_SilhouettedRenderers.Length - 1] = renderer;
+            }
         }
 
         protected Vector3 shadowPosition

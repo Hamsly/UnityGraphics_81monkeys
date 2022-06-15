@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using PlasticGui;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Tilemaps;
+using UnityEngine.UIElements;
 
 
 namespace UnityEngine.Experimental.Rendering.Universal
@@ -43,6 +46,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             base.Awake();
 
+            m_SilhouettedRenderers ??= Array.Empty<Renderer>();
+
             Bounds bounds = new Bounds(transform.position, Vector3.one);
 
             Renderer renderer = GetComponent<Renderer>();
@@ -63,6 +68,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     bounds = collider.bounds;
             }
 #endif
+
             Vector3 inverseScale = Vector3.zero;
             Vector3 relOffset = transform.position;
 
@@ -95,7 +101,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             m_ShadowCasterGroup = null;
         }
-
 
         public void Update()
         {

@@ -301,8 +301,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
             _requireReCenter = true;
             _imageHash = _sourceTexture.imageContentsHash;
 
-            //_workingTexture = shadowOffsetMapDictionary.GetShadowTexture(_sourceTexture);
-
             xLockPosition = -1;
             yLockPosition = -1;
 
@@ -991,10 +989,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
                 if (_sourceSprite != null)
                 {
-                    Debug.Log("Source Sprite Change");
                     _sourceTexture = _sourceSprite.texture;
                     _workingTexture = SpriteGetOffsetTexture(_sourceSprite);
                 }
+
+                ResetWorkSpace();
             }
 
 
@@ -1099,6 +1098,8 @@ namespace UnityEditor.Experimental.Rendering.Universal
                     }
 
                     newTexture.SetPixels(pixels);
+                    newTexture.filterMode = FilterMode.Point;
+                    newTexture.wrapMode = TextureWrapMode.Clamp;
                     newTexture.Apply();
 
                     var newPath = AssetDatabase.GenerateUniqueAssetPath("Assets/Textures/ShadowOffsetMaps/SOM_" +
