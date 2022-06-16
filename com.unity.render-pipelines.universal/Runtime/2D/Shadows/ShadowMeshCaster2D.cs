@@ -24,6 +24,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] int m_ShapePathHash = 0;
         [SerializeField] Mesh m_Mesh;
 
+
         internal Mesh mesh => m_Mesh;
         internal Vector3[] shapePath => m_ShapePath;
         internal int shapePathHash { get { return m_ShapePathHash; } set { m_ShapePathHash = value; } }
@@ -88,6 +89,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     relOffset + new Vector3(inverseScale.x * bounds.max.x, inverseScale.y * bounds.min.y),
                 };
             }
+
+            RecalculateBounds();
         }
 
         protected void OnEnable()
@@ -106,9 +109,40 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             bool rebuildMesh = LightUtility.CheckForChange(m_ShapePathHash, ref m_PreviousPathHash);
             if (rebuildMesh)
+            {
                 ShadowUtility.GenerateShadowMesh(m_Mesh, m_ShapePath);
 
+                RecalculateBounds();
+            }
+
             base.Update();
+        }
+
+        private void RecalculateBounds()
+        {
+            var minX = float.MaxValue;
+            var maxX = float.MinValue;
+            var minY = float.MaxValue;
+            var maxY = float.MinValue;
+            foreach (var point in shapePath)
+            {
+                Vector3 pp = point;
+                var transformRef = transform;
+                var lossyScale = transformRef.lossyScale;
+
+                pp.x *= lossyScale.x;
+                pp.y *= lossyScale.y;
+
+                minX = Mathf.Min(pp.x, minX);
+                maxX = Mathf.Max(pp.x, maxX);
+
+                minY = Mathf.Min(pp.y, minY);
+                maxY = Mathf.Max(pp.y, maxY);
+            }
+
+            var center = new Vector3(Mathf.Lerp(minX, maxX, 0.5f), Mathf.Lerp(minY, maxY, 0.5f), 0);
+
+            m_MeshBounds = new Bounds(center, new Vector3(maxX - minX, maxY - minY, 1));
         }
 
         private void OnDrawGizmosSelected()

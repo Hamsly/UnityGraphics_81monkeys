@@ -108,28 +108,26 @@ namespace UnityEngine.Experimental.Rendering.Universal
             return rendererData.removeSelfShadowMaterials[shadowMaterialIndex];
         }
 
+        public static Bounds OrthographicBounds(Camera camera)
+        {
+            float screenAspect = (float)Screen.width / (float)Screen.height;
+            float cameraHeight = camera.orthographicSize * 2;
+            Bounds bounds = new Bounds(
+                camera.transform.position,
+                new Vector3(cameraHeight * screenAspect, cameraHeight, float.MaxValue));
+            return bounds;
+        }
+
         public static void RenderShadows(IRenderPass2D pass, RenderingData renderingData, CommandBuffer cmdBuffer, int layerToRender, Light2D light, float shadowIntensity, RenderTargetIdentifier renderTexture)
         {
-            int blurAmount = 1;
-
             cmdBuffer.SetRenderTarget(renderTexture, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmdBuffer.ClearRenderTarget(true, true, Color.black);  // clear stencil
 
-            RenderTargetIdentifier workingTexture = new RenderTargetIdentifier();
-            if (blurAmount > 1)
-            {
-                workingTexture = m_WorkingTexture.id;
-                CreateShadowRenderTexture(pass, m_WorkingTexture, renderingData, cmdBuffer);
+            var lightPosition = light.transform.position;
+            cmdBuffer.SetGlobalVector(k_LightPosID, lightPosition);
 
+            var cameraBound = OrthographicBounds(renderingData.cameraData.camera);
 
-                cmdBuffer.SetRenderTarget(workingTexture, RenderBufferLoadAction.DontCare,
-                    RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
-                cmdBuffer.ClearRenderTarget(true, true, Color.black); // clear stencil
-            }
-
-            cmdBuffer.SetGlobalVector(k_LightPosID, light.transform.position);
-
-            var blurMaterial = pass.rendererData.GetPostRenderShadowMaterial();
             var shadowCasterGroups = ShadowCasterGroup2DManager.shadowCasterGroups;
             if (shadowCasterGroups != null && shadowCasterGroups.Count > 0)
             {
@@ -148,50 +146,25 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                     if (shadowCasters != null)
                     {
-
                         // Draw the shadow casting group first, then draw the silhouettes..
-                        for (var i = 0; i < shadowCasters.Count; i++)
+                        foreach (var shadowCaster in shadowCasters)
                         {
-                            var shadowCaster = shadowCasters[i];
+                            if (shadowCaster == null) continue;
+                            var b = shadowCaster.MeshBounds;
+                            b.center += shadowCaster.transform.position;
+                            if(!cameraBound.Intersects(shadowCaster.MeshBounds)) continue;
 
-                            if (shadowCaster != null)
-                            {
-                                Material shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
-                                shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
-                            }
+                            Material shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
+                            shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
                         }
 
-                        for (var i = 0; i < shadowCasters.Count; i++)
+                        foreach (var shadowCaster in shadowCasters)
                         {
-                            var shadowCaster = shadowCasters[i];
-
-                            if (shadowCaster != null)
-                            {
-                                Material removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
-                                shadowCaster.ExcludeSilhouettes(cmdBuffer,layerToRender,removeSelfShadowMaterial);
-
-                                /*
-                                else
-                                {
-                                    if (!shadowCaster.selfShadows)
-                                    {
-                                        var meshMat = shadowCaster.transform.localToWorldMatrix;
-                                        cmdBuffer.DrawMesh(shadowCaster.mesh, meshMat, removeSelfShadowMaterial);
-                                    }
-                                }
-                                */
-                            }
+                            if (shadowCaster == null) continue;
+                            Material removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
+                            shadowCaster.ExcludeSilhouettes(cmdBuffer,layerToRender,removeSelfShadowMaterial);
                         }
                     }
-                }
-
-                if (blurAmount > 1)
-                {
-                    cmdBuffer.SetGlobalVector(k_MainTex_TexelSize, new Vector4(1280, 720, 0, 0));
-                    cmdBuffer.SetGlobalFloat(k_BlurStrength, 2);
-                    cmdBuffer.Blit(workingTexture, renderTexture, blurMaterial, 0);
-
-                    cmdBuffer.ReleaseTemporaryRT(m_WorkingTexture.id);
                 }
             }
         }
