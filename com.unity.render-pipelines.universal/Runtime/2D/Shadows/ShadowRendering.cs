@@ -108,16 +108,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
             return rendererData.removeSelfShadowMaterials[shadowMaterialIndex];
         }
 
-        public static Bounds OrthographicBounds(Camera camera)
-        {
-            float screenAspect = (float)Screen.width / (float)Screen.height;
-            float cameraHeight = camera.orthographicSize * 2;
-            Bounds bounds = new Bounds(
-                camera.transform.position,
-                new Vector3(cameraHeight * screenAspect, cameraHeight, float.MaxValue));
-            return bounds;
-        }
-
         public static void RenderShadows(IRenderPass2D pass, RenderingData renderingData, CommandBuffer cmdBuffer, int layerToRender, Light2D light, float shadowIntensity, RenderTargetIdentifier renderTexture)
         {
             cmdBuffer.SetRenderTarget(renderTexture, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
@@ -126,9 +116,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var lightPosition = light.transform.position;
             cmdBuffer.SetGlobalVector(k_LightPosID, lightPosition);
 
-            var cameraBound = OrthographicBounds(renderingData.cameraData.camera);
+            var shadowCount = 0;
 
-            var shadowCasterGroups = ShadowCasterGroup2DManager.shadowCasterGroups;
+            var shadowCasterGroups = ShadowCasterGroup2DManager.shadowCasterGroupsCulled;
             if (shadowCasterGroups != null && shadowCasterGroups.Count > 0)
             {
                 var previousShadowGroupIndex = -1;
@@ -136,7 +126,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 for (var group = 0; group < shadowCasterGroups.Count; group++)
                 {
                     var shadowCasterGroup = shadowCasterGroups[group];
-                    var shadowCasters = shadowCasterGroup.GetShadowCasters();
+                    var shadowCasters = shadowCasterGroup.GetShadowCastersCulled();
 
                     var shadowGroupIndex = shadowCasterGroup.GetShadowGroup();
                     if (LightUtility.CheckForChange(shadowGroupIndex, ref previousShadowGroupIndex) || shadowGroupIndex == 0)
@@ -149,13 +139,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
                         // Draw the shadow casting group first, then draw the silhouettes..
                         foreach (var shadowCaster in shadowCasters)
                         {
-                            if (shadowCaster == null) continue;
-                            var b = shadowCaster.MeshBounds;
-                            b.center += shadowCaster.transform.position;
-                            if(!cameraBound.Intersects(shadowCaster.MeshBounds)) continue;
-
                             Material shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
                             shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
+                            shadowCount += 1;
                         }
 
                         foreach (var shadowCaster in shadowCasters)
@@ -167,6 +153,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     }
                 }
             }
+
+            Debug.Log("Rendered " + shadowCount + " shadows");
         }
     }
 }

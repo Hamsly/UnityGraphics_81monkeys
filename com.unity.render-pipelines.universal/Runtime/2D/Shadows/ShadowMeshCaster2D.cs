@@ -160,7 +160,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                 var point = pp + transformRef.position;
                 Gizmos.DrawLine(point, point + new Vector3(0, shadowHeight, 0));
+
             }
+
+            Gizmos.DrawWireCube(m_MeshBounds.center + transform.position,m_MeshBounds.size);
         }
 
         public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material)

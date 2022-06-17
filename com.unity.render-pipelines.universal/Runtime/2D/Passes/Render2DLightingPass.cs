@@ -277,6 +277,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                 var desc = this.GetBlendStyleRenderTextureDesc(renderingData);
 
+                ShadowCasterGroup2DManager.OptimizeShadows(camera.OrthographicBounds());
+
                 var layerBatches = LayerUtility.CalculateBatches(m_Renderer2DData.lightCullResult, out var batchCount);
                 var batchesDrawn = 0;
 

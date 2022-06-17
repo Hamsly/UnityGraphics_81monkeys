@@ -7,8 +7,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
     internal class ShadowCasterGroup2DManager
     {
         static List<ShadowCasterGroup2D> s_ShadowCasterGroups = null;
+        static List<ShadowCasterGroup2D> s_ShadowCasterGroupsCulled = null;
 
         public static List<ShadowCasterGroup2D> shadowCasterGroups { get { return s_ShadowCasterGroups; } }
+        public static List<ShadowCasterGroup2D> shadowCasterGroupsCulled { get { return s_ShadowCasterGroups; } }
 
 
         public static void AddShadowCasterGroupToList(ShadowCasterGroup2D shadowCaster, List<ShadowCasterGroup2D> list)
@@ -60,6 +62,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
 
             return false;
+        }
+
+        public static void OptimizeShadows(Bounds cameraBounds)
+        {
+            s_ShadowCasterGroupsCulled ??= new List<ShadowCasterGroup2D>();
+
+            s_ShadowCasterGroupsCulled.Clear();
+
+            foreach (var shadowCasterGroup in s_ShadowCasterGroups)
+            {
+                if(shadowCasterGroup.OptimizeShadows(cameraBounds))
+                    s_ShadowCasterGroupsCulled.Add(shadowCasterGroup);
+            }
         }
 
         public static void RemoveFromShadowCasterGroup(ShadowCaster2D shadowMeshCaster, ShadowCasterGroup2D shadowCasterGroup)
