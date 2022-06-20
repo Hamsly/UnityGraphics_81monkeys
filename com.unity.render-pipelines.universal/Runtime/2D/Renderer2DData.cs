@@ -151,6 +151,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
             RebuildMaterials();
         }
 
+        public void RebuildMaterials()
+        {
+            Debug.Log("Rebuild Shadow Materials...");
+
+            shadowMaterials = new Material[(int)ShadowMaterialTypes.Count,TotalMaterials];
+            removeSelfShadowMaterials = new Material[TotalMaterials];
+
+            postRenderShadowMaterial = CoreUtils.CreateEngineMaterial(postRenderShadowShader);
+        }
 
 
         public enum ShadowMaterialTypes
