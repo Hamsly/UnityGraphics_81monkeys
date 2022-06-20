@@ -1042,7 +1042,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         private bool SpriteSetOffsetTexture(Sprite sourceSprite,Texture2D offsetTexture)
         {
             var sourceSpritePath = AssetDatabase.GetAssetPath(sourceSprite);
-            TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(sourceSpritePath);
+            TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(sourceSpritePath);
 
             if (importer == null) return false;
 
@@ -1063,9 +1063,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             if (index == -1)
             {
-                var newSecondarySpriteTexture = new SecondarySpriteTexture();
-                newSecondarySpriteTexture.name = "_OffsetMap";
-                newSecondarySpriteTexture.texture = offsetTexture;
+                var newSecondarySpriteTexture = new SecondarySpriteTexture
+                {
+                    name = "_OffsetMap",
+                    texture = offsetTexture
+                };
 
                 var secondarySpriteTextureList = new List<SecondarySpriteTexture>(secondarySpriteTextures);
                 secondarySpriteTextureList.Add(newSecondarySpriteTexture);
@@ -1078,6 +1080,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 importer.secondarySpriteTextures = secondarySpriteTextures;
             }
 
+            EditorUtility.SetDirty(importer);
+            importer.SaveAndReimport();
+
             AssetDatabase.ImportAsset(sourceSpritePath,ImportAssetOptions.ForceUpdate);
             return true;
         }
@@ -1089,34 +1094,34 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 var sourceTexture = sourceSprite.texture;
 
                 var newTexture = new Texture2D(sourceTexture.width, sourceTexture.height);
-                if (SpriteSetOffsetTexture(sourceSprite, newTexture))
+
+                var pixels = newTexture.GetPixels();
+                for (var i = 0; i < pixels.Length; i++)
                 {
-                    var pixels = newTexture.GetPixels();
-                    for (var i = 0; i < pixels.Length; i++)
-                    {
-                        pixels[i] = new Color(0.5f, 0f, 0.5f, 1);
-                    }
-
-                    newTexture.SetPixels(pixels);
-                    newTexture.filterMode = FilterMode.Point;
-                    newTexture.wrapMode = TextureWrapMode.Clamp;
-                    newTexture.Apply();
-
-                    var newPath = AssetDatabase.GenerateUniqueAssetPath("Assets/Textures/ShadowOffsetMaps/SOM_" +
-                                                                        sourceTexture.name + ".renderTexture");
-                    AssetDatabase.CreateAsset(newTexture, newPath);
-
-                    return newTexture;
+                    pixels[i] = new Color(0.5f, 0f, 0.5f, 1);
                 }
-                else
-                {
-                    EditorUtility.DisplayDialog("Cannot Generate Working Texture!",
-                        "Failed to add offset map to this asset.\n\n" +
-                        "This can happen with built in assets. " +
-                        "Please ensure that the asset you are editing" +
-                        " can be opened in the Sprite Editor.",
-                        "Ok");
-                }
+
+                newTexture.SetPixels(pixels);
+                newTexture.filterMode = FilterMode.Point;
+                newTexture.wrapMode = TextureWrapMode.Clamp;
+                newTexture.Apply();
+
+                var newPath = AssetDatabase.GenerateUniqueAssetPath("Assets/Textures/ShadowOffsetMaps/SOM_" +
+                                                                    sourceTexture.name + ".renderTexture");
+                AssetDatabase.CreateAsset(newTexture, newPath);
+
+                if (SpriteSetOffsetTexture(sourceSprite, newTexture)) return newTexture;
+
+                EditorUtility.DisplayDialog("Cannot Generate Working Texture!",
+                    "Failed to add offset map to this asset.\n\n" +
+                    "This can happen with built in assets. " +
+                    "Please ensure that the asset you are editing" +
+                    " can be opened in the Sprite Editor.",
+                    "Ok");
+
+                AssetDatabase.DeleteAsset(newPath);
+
+                return null;
             }
 
             return null;

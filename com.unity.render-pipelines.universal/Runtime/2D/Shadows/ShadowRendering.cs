@@ -91,7 +91,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex] = CoreUtils.CreateEngineMaterial(rendererData.GetShaderType(shadowMaterialType));
                 rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, shadowMaterialIndex);
-                Debug.Log("Built " + shadowMaterialType + " material " + shadowMaterialIndex);
+                //Debug.Log("Built " + shadowMaterialType + " material " + shadowMaterialIndex);
             }
 
             return rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex];
@@ -106,7 +106,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 rendererData.removeSelfShadowMaterials[shadowMaterialIndex] = CoreUtils.CreateEngineMaterial(rendererData.removeSelfShadowShader);
                 rendererData.removeSelfShadowMaterials[shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, shadowMaterialIndex);
-                Debug.Log("Built Remove Self material " + shadowMaterialIndex);
+                //Debug.Log("Built Remove Self material " + shadowMaterialIndex);
             }
 
             return rendererData.removeSelfShadowMaterials[shadowMaterialIndex];
