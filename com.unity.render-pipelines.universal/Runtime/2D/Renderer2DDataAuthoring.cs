@@ -24,6 +24,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
             return Shader.Find("Universal Render Pipeline/2D/Sprite-Lit-Default");
         }
 
+        public void RebuildMaterials()
+        {
+            Debug.Log("Rebuild Shadow Materials...");
+
+            shadowMaterials = new Material[(int)ShadowMaterialTypes.Count,TotalMaterials];
+            removeSelfShadowMaterials = new Material[TotalMaterials];
+
+            postRenderShadowMaterial = CoreUtils.CreateEngineMaterial(postRenderShadowShader);
+        }
+
         internal override Material GetDefaultMaterial(DefaultMaterialType materialType)
         {
             if (materialType == DefaultMaterialType.Sprite || materialType == DefaultMaterialType.Particle)

@@ -34,6 +34,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
             public static readonly GUIContent cameraSortingLayerTextureHeader = EditorGUIUtility.TrTextContent("Camera Sorting Layer Texture", "Layers from back most to selected bounds will be rendered to _CameraSortingLayerTexture");
             public static readonly GUIContent cameraSortingLayerTextureBound = EditorGUIUtility.TrTextContent("Foremost Sorting Layer", "Layers from back most to selected bounds will be rendered to _CameraSortingLayerTexture");
             public static readonly GUIContent cameraSortingLayerDownsampling = EditorGUIUtility.TrTextContent("Downsampling Method", "Method used to copy _CameraSortingLayerTexture");
+
+            public static readonly GUIContent shadowsHeader = EditorGUIUtility.TrTextContent("Shadows");
+            public static readonly GUIContent shadowsRebuildMatsButton = EditorGUIUtility.TrTextContent("Rebuild Materials");
         }
 
         struct LightBlendStyleProps
@@ -67,6 +70,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         SavedBool m_LightBlendStylesFoldout;
         SavedBool m_CameraSortingLayerTextureFoldout;
         SavedBool m_PostProcessingFoldout;
+        SavedBool m_ShadowFoldout;
 
         Analytics.Renderer2DAnalytics m_Analytics = Analytics.Renderer2DAnalytics.instance;
         Renderer2DData m_Renderer2DData;
@@ -132,6 +136,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             m_LightBlendStylesFoldout = new SavedBool($"{target.GetType()}.LightBlendStylesFoldout", true);
             m_CameraSortingLayerTextureFoldout = new SavedBool($"{target.GetType()}.CameraSortingLayerTextureFoldout", true);
             m_PostProcessingFoldout = new SavedBool($"{target.GetType()}.PostProcessingFoldout", true);
+            m_ShadowFoldout = new SavedBool($"{target.GetType()}.ShadowFoldout", true);
         }
 
         private void OnDestroy()
@@ -148,6 +153,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             DrawLightBlendStyles();
             DrawCameraSortingLayerTexture();
             DrawPostProcessing();
+            DrawShadows();
 
             m_WasModified |= serializedObject.hasModifiedProperties;
             serializedObject.ApplyModifiedProperties();
@@ -270,6 +276,19 @@ namespace UnityEditor.Experimental.Rendering.Universal
             EditorGUILayout.PropertyField(m_PostProcessData, Styles.postProcessData);
 
             EditorGUILayout.Space();
+        }
+
+        private void DrawShadows()
+        {
+            CoreEditorUtils.DrawSplitter();
+            m_ShadowFoldout.value = CoreEditorUtils.DrawHeaderFoldout(Styles.shadowsHeader, m_ShadowFoldout.value);
+            if (!m_ShadowFoldout.value)
+                return;
+
+            if (GUILayout.Button(Styles.shadowsRebuildMatsButton))
+            {
+                m_Renderer2DData.RebuildMaterials();
+            }
         }
     }
 }

@@ -121,6 +121,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         internal int cameraSortingLayerTextureBound => m_CameraSortingLayersTextureBound;
         internal Downsampling cameraSortingLayerDownsamplingMethod => m_CameraSortingLayerDownsamplingMethod;
 
+        const int TotalMaterials = 256;
+
         protected override ScriptableRenderer Create()
         {
 #if UNITY_EDITOR
@@ -131,6 +133,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 #endif
             return new Renderer2D(this);
         }
+
+
 
         protected override void OnEnable()
         {
@@ -144,14 +148,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
             normalsRenderTarget.Init("_NormalMap");
             shadowsRenderTarget.Init("_ShadowTex");
 
-            const int totalMaterials = 256;
-            if (shadowMaterials == null || shadowMaterials.Length == 0)
-                shadowMaterials = new Material[(int)ShadowMaterialTypes.Count,totalMaterials];
-            if (removeSelfShadowMaterials == null || removeSelfShadowMaterials.Length == 0)
-                removeSelfShadowMaterials = new Material[totalMaterials];
-
-            postRenderShadowMaterial = CoreUtils.CreateEngineMaterial(postRenderShadowShader);
+            RebuildMaterials();
         }
+
+
 
         public enum ShadowMaterialTypes
         {
