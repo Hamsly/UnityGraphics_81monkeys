@@ -118,7 +118,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var lightPosition = light.transform.position;
             cmdBuffer.SetGlobalVector(k_LightPosID, lightPosition);
 
-            var shadowCount = 0;
             var shadowCasterGroups = ShadowCasterGroup2DManager.shadowCasterGroupsCulled;
             if (shadowCasterGroups != null && shadowCasterGroups.Count > 0)
             {
@@ -141,7 +140,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     {
                         var shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
                         shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
-                        shadowCount += 1;
                     }
 
                     var removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
@@ -151,8 +149,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     }
                 }
             }
-
-            //Debug.Log("Rendered " + shadowCount + " shadows");
         }
     }
 }
