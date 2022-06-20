@@ -152,7 +152,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 }
             }
 
-            Debug.Log("Rendered " + shadowCount + " shadows");
+            //Debug.Log("Rendered " + shadowCount + " shadows");
         }
     }
 }
