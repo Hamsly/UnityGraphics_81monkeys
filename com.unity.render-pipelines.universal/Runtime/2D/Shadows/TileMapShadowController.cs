@@ -26,16 +26,20 @@ namespace UnityEngine.Experimental.Rendering.Universal
             tilemapRenderer = GetComponent<TilemapRenderer>();
             UpdateShadowCasters();
 
+#if UNITY_EDITOR
             Tilemap.tilemapTileChanged += OnTileChange;
+#endif
         }
 
         private void OnDisable()
         {
             base.OnDisable();
-
+#if UNITY_EDITOR
             Tilemap.tilemapTileChanged -= OnTileChange;
+#endif
         }
 
+#if UNITY_EDITOR
         private static void OnTileChange(Tilemap tileMap, Tilemap.SyncTile[] syncTiles)
         {
             if (tileMap.gameObject.TryGetComponent(out TileMapShadowController tileMapShadowController))
@@ -43,6 +47,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 tileMapShadowController.UpdateShadowCasters();
             }
         }
+#endif
 
         private void OnValidate()
         {
