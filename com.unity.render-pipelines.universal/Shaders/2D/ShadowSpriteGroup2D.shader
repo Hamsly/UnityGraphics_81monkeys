@@ -1,4 +1,4 @@
-Shader "Hidden/ShadowGroup2D"
+Shader "Hidden/ShadowSpriteGroup2D"
 {
     Properties
     {

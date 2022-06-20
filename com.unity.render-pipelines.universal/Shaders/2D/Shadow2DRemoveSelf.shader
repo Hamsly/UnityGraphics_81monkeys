@@ -3,7 +3,7 @@ Shader "Hidden/Shadow2DRemoveSelf"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
-        [PerRendererData][HideInInspector] _ShadowStencilGroup("__ShadowStencilGroup", Float) = 1.0
+        _ShadowStencilGroup("_ShadowStencilGroup", float) = 1
     }
     SubShader
     {

@@ -3,7 +3,7 @@ Shader "Hidden/ShadowMeshGroup2D"
     Properties
     {
         _MainTex("Texture", 2D) = "white" {}
-        _ShadowStencilGroup("__ShadowStencilGroup", Float) = 1.0
+        _ShadowStencilGroup("_ShadowStencilGroup", float) = 1
     }
 
     SubShader
@@ -93,7 +93,7 @@ Shader "Hidden/ShadowMeshGroup2D"
                 o.vertex = TransformWorldToHClip(position);
 
                 // RGB - R is shadow value (to support soft shadows), G is Self Shadow Mask, B is No Shadow Mask
-                o.color =  (1 - (length(position - vertexWS.xy) / max(_ProjectionOffset, _FalloffRate))) * shadowHeightTest;  // v.color;
+                o.color = shadowHeightTest;//(1 - (length(position - vertexWS.xy) / max(_ProjectionOffset, _FalloffRate))) * shadowHeightTest;  // v.color;
                 o.color.g = 0.5;
                 o.color.b = 0;
 

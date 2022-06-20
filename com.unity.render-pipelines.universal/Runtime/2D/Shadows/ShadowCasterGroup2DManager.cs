@@ -1,21 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace UnityEngine.Experimental.Rendering.Universal
 {
     internal class ShadowCasterGroup2DManager
     {
-        static List<ShadowCasterGroup2D> s_ShadowCasterGroups = null;
-        static List<ShadowCasterGroup2D> s_ShadowCasterGroupsCulled = null;
-
-        public static List<ShadowCasterGroup2D> shadowCasterGroups { get { return s_ShadowCasterGroups; } }
-        public static List<ShadowCasterGroup2D> shadowCasterGroupsCulled { get { return s_ShadowCasterGroups; } }
+        public static List<ShadowCasterGroup2D> shadowCasterGroups { get; private set; } = null;
+        public static List<ShadowCasterGroup2D> shadowCasterGroupsCulled { get; private set; } = null;
 
 
         public static void AddShadowCasterGroupToList(ShadowCasterGroup2D shadowCaster, List<ShadowCasterGroup2D> list)
         {
-            int positionToInsert = 0;
+            var positionToInsert = 0;
             for (positionToInsert = 0; positionToInsert < list.Count; positionToInsert++)
             {
                 if (shadowCaster.GetShadowGroup() == list[positionToInsert].GetShadowGroup())
@@ -34,7 +32,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             CompositeShadowCaster2D retGroup = null;
 
-            Transform transformToCheck = shadowMeshCaster.transform.parent;
+            var transformToCheck = shadowMeshCaster.transform.parent;
             while (transformToCheck != null)
             {
                 CompositeShadowCaster2D currentGroup;
@@ -47,33 +45,31 @@ namespace UnityEngine.Experimental.Rendering.Universal
             return retGroup;
         }
 
-        public static bool AddToShadowCasterGroup(ShadowCaster2D shadowMeshCaster, ref ShadowCasterGroup2D shadowCasterGroup)
+        public static bool AddToShadowCasterGroup(ShadowCaster2D shadowCaster2D, ref ShadowCasterGroup2D shadowCasterGroup)
         {
-            ShadowCasterGroup2D newShadowCasterGroup = FindTopMostCompositeShadowCaster(shadowMeshCaster) as ShadowCasterGroup2D;
+            var newShadowCasterGroup = FindTopMostCompositeShadowCaster(shadowCaster2D) as ShadowCasterGroup2D;
 
             if (newShadowCasterGroup == null)
-                newShadowCasterGroup = shadowMeshCaster.GetComponent<ShadowCaster2D>();
+                newShadowCasterGroup = shadowCaster2D.GetComponent<ShadowCaster2D>();
 
-            if (newShadowCasterGroup != null && shadowCasterGroup != newShadowCasterGroup)
-            {
-                newShadowCasterGroup.RegisterShadowCaster2D(shadowMeshCaster);
-                shadowCasterGroup = newShadowCasterGroup;
-                return true;
-            }
+            if (newShadowCasterGroup == null || shadowCasterGroup == newShadowCasterGroup) return false;
 
-            return false;
+            newShadowCasterGroup.RegisterShadowCaster2D(shadowCaster2D);
+            shadowCasterGroup = newShadowCasterGroup;
+            return true;
+
         }
 
-        public static void OptimizeShadows(Bounds cameraBounds)
+        public static void OptimizeShadows(Rect cameraBounds)
         {
-            s_ShadowCasterGroupsCulled ??= new List<ShadowCasterGroup2D>();
+            shadowCasterGroupsCulled ??= new List<ShadowCasterGroup2D>();
 
-            s_ShadowCasterGroupsCulled.Clear();
+            shadowCasterGroupsCulled.Clear();
 
-            foreach (var shadowCasterGroup in s_ShadowCasterGroups)
+            foreach (var shadowCasterGroup in shadowCasterGroups)
             {
                 if(shadowCasterGroup.OptimizeShadows(cameraBounds))
-                    s_ShadowCasterGroupsCulled.Add(shadowCasterGroup);
+                    shadowCasterGroupsCulled.Add(shadowCasterGroup);
             }
         }
 
@@ -88,16 +84,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (group == null)
                 return;
 
-            if (s_ShadowCasterGroups == null)
-                s_ShadowCasterGroups = new List<ShadowCasterGroup2D>();
+            if (shadowCasterGroups == null)
+                shadowCasterGroups = new List<ShadowCasterGroup2D>();
 
-            AddShadowCasterGroupToList(group, s_ShadowCasterGroups);
+            AddShadowCasterGroupToList(group, shadowCasterGroups);
         }
 
         public static void RemoveGroup(ShadowCasterGroup2D group)
         {
-            if (group != null && s_ShadowCasterGroups != null)
-                RemoveShadowCasterGroupFromList(group, s_ShadowCasterGroups);
+            if (group != null && shadowCasterGroups != null)
+                RemoveShadowCasterGroupFromList(group, shadowCasterGroups);
         }
     }
 }

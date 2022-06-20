@@ -19,9 +19,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] bool m_SelfShadows = false;
         [SerializeField] int[] m_ApplyToSortingLayers = null;
         [SerializeField] Renderer2DData.ShadowMaterialTypes m_materialType = Renderer2DData.ShadowMaterialTypes.MeshShadows;
-        protected Bounds m_MeshBounds;
 
-        public Bounds MeshBounds => m_MeshBounds;
+        protected Rect m_MeshBounds;
+        public Rect MeshBounds => m_MeshBounds;
 
         int m_PreviousShadowGroup = 0;
         bool m_PreviousCastsShadows = true;

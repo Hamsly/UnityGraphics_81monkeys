@@ -7,12 +7,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
     internal static class ShadowRendering
     {
         private static readonly int k_LightPosID = Shader.PropertyToID("_LightPos");
-        private static readonly int k_ShadowStencilGroupID = Shader.PropertyToID("_ShadowStencilGroup");
         private static readonly int k_ShadowIntensityID = Shader.PropertyToID("_ShadowIntensity");
         private static readonly int k_ShadowVolumeIntensityID = Shader.PropertyToID("_ShadowVolumeIntensity");
+        private static readonly int k_ShadowStencilGroupID = Shader.PropertyToID("_ShadowStencilGroup");
 
         private static readonly int k_MainTex_TexelSize = Shader.PropertyToID("_MainTex_TexelSize");
         private static readonly int k_BlurStrength = Shader.PropertyToID("_BlurStrength");
+
 
         private static RenderTargetHandle m_WorkingTexture;
         private static RenderTargetHandle[] m_RenderTargets = null;
@@ -83,14 +84,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
             cmdBuffer.ReleaseTemporaryRT(m_RenderTargets[shadowIndex].id);
         }
 
-
         private static Material GetShadowMaterial(this Renderer2DData rendererData,Renderer2DData.ShadowMaterialTypes shadowMaterialType, int index)
         {
             var shadowMaterialIndex = index % 255;
             if (rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex] == null)
             {
                 rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex] = CoreUtils.CreateEngineMaterial(rendererData.GetShaderType(shadowMaterialType));
-                rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, index);
+                rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, shadowMaterialIndex);
             }
 
             return rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex];
@@ -99,10 +99,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private static Material GetRemoveSelfShadowMaterial(this Renderer2DData rendererData, int index)
         {
             var shadowMaterialIndex = index % 255;
+
+
             if (rendererData.removeSelfShadowMaterials[shadowMaterialIndex] == null)
             {
                 rendererData.removeSelfShadowMaterials[shadowMaterialIndex] = CoreUtils.CreateEngineMaterial(rendererData.removeSelfShadowShader);
-                rendererData.removeSelfShadowMaterials[shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, index);
+                rendererData.removeSelfShadowMaterials[shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, shadowMaterialIndex);
             }
 
             return rendererData.removeSelfShadowMaterials[shadowMaterialIndex];
@@ -117,16 +119,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
             cmdBuffer.SetGlobalVector(k_LightPosID, lightPosition);
 
             var shadowCount = 0;
-
             var shadowCasterGroups = ShadowCasterGroup2DManager.shadowCasterGroupsCulled;
             if (shadowCasterGroups != null && shadowCasterGroups.Count > 0)
             {
-                var previousShadowGroupIndex = -1;
                 var incrementingGroupIndex = 0;
-                for (var group = 0; group < shadowCasterGroups.Count; group++)
+                var previousShadowGroupIndex = -1;
+
+                foreach (var shadowCasterGroup in shadowCasterGroups)
                 {
-                    var shadowCasterGroup = shadowCasterGroups[group];
                     var shadowCasters = shadowCasterGroup.GetShadowCastersCulled();
+                    if (shadowCasters == null) continue;
 
                     var shadowGroupIndex = shadowCasterGroup.GetShadowGroup();
                     if (LightUtility.CheckForChange(shadowGroupIndex, ref previousShadowGroupIndex) || shadowGroupIndex == 0)
@@ -134,22 +136,18 @@ namespace UnityEngine.Experimental.Rendering.Universal
                         incrementingGroupIndex++;
                     }
 
-                    if (shadowCasters != null)
+                    // Draw the shadow casting group first, then draw the silhouettes..
+                    foreach (var shadowCaster in shadowCasters)
                     {
-                        // Draw the shadow casting group first, then draw the silhouettes..
-                        foreach (var shadowCaster in shadowCasters)
-                        {
-                            Material shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
-                            shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
-                            shadowCount += 1;
-                        }
+                        var shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
+                        shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
+                        shadowCount += 1;
+                    }
 
-                        foreach (var shadowCaster in shadowCasters)
-                        {
-                            if (shadowCaster == null) continue;
-                            Material removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
-                            shadowCaster.ExcludeSilhouettes(cmdBuffer,layerToRender,removeSelfShadowMaterial);
-                        }
+                    var removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
+                    foreach (var shadowCaster in shadowCasters)
+                    {
+                        shadowCaster.ExcludeSilhouettes(cmdBuffer,layerToRender,removeSelfShadowMaterial);
                     }
                 }
             }

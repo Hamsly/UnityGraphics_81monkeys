@@ -34,13 +34,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public float shadowHeight
         {
-            set { m_Height = value; }
-            get { return m_Height; }
+            set => m_Height = value;
+            get => m_Height;
         }
         public float falloffRate
         {
-            set { m_FalloffRate = value; }
-            get { return m_FalloffRate; }
+            set => m_FalloffRate = value;
+            get => m_FalloffRate;
         }
 
         private void Awake()
@@ -140,9 +140,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 maxY = Mathf.Max(pp.y, maxY);
             }
 
-            var center = new Vector3(Mathf.Lerp(minX, maxX, 0.5f), Mathf.Lerp(minY, maxY, 0.5f), 0);
-
-            m_MeshBounds = new Bounds(center, new Vector3(maxX - minX, maxY - minY, 1));
+            m_MeshBounds = new Rect(new Vector2(minX,minY), new Vector2(maxX - minX, maxY - minY));
         }
 
         private void OnDrawGizmosSelected()
@@ -163,7 +161,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             }
 
-            Gizmos.DrawWireCube(m_MeshBounds.center + transform.position,m_MeshBounds.size);
+            Gizmos.DrawWireCube(m_MeshBounds.center + (Vector2)transform.position,m_MeshBounds.size);
         }
 
         public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material)

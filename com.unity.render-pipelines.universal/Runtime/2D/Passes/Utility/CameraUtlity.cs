@@ -6,13 +6,14 @@ namespace UnityEngine.Experimental.Rendering.Universal
 {
     public static class CameraUtility
     {
-        public static Bounds OrthographicBounds(this Camera camera)
+        public static Rect OrthographicBounds(this Camera camera)
         {
             float screenAspect = (float)Screen.width / (float)Screen.height;
             float cameraHeight = camera.orthographicSize * 2;
-            Bounds bounds = new Bounds(
-                camera.transform.position,
-                new Vector3(cameraHeight * screenAspect, cameraHeight, float.MaxValue));
+            Vector2 size = new Vector2(cameraHeight * screenAspect, cameraHeight);
+            Rect bounds = new Rect(
+                (Vector2)camera.transform.position - (size * 0.5f),
+                size);
             return bounds;
         }
     }

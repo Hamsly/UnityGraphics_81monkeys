@@ -213,6 +213,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                                 CopyCameraSortingLayerRenderTexture(context, renderingData);
                         }
 
+                        /*
                         // Draw light volumes
                         if (layerBatch.lightStats.totalVolumetricUsage > 0)
                         {
@@ -223,6 +224,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                             cmd.EndSample(sampleName);
                         }
+                        */
                     }
                 }
             }

@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 m_ShadowCasters.Remove(shadowCaster2D);
         }
 
-        public bool OptimizeShadows(Bounds cameraBounds)
+        public bool OptimizeShadows(Rect cameraBounds)
         {
             m_ShadowCasters ??= new List<ShadowCaster2D>();
             m_ShadowCastersCulled ??= new List<ShadowCaster2D>();
@@ -41,10 +41,14 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 if(shadowCaster == null) continue;
 
                 var b = shadowCaster.MeshBounds;
-                b.center += shadowCaster.transform.position;
-                if(!cameraBounds.Intersects(b)) continue;
+                b.center += (Vector2)shadowCaster.transform.position;
 
-                m_ShadowCastersCulled.Add(shadowCaster);
+                if (cameraBounds.min.x <= b.max.x &&
+                    cameraBounds.max.x >= b.min.x &&
+                    cameraBounds.min.y <= b.max.y &&
+                    cameraBounds.max.y >= b.min.y)
+
+                    m_ShadowCastersCulled.Add(shadowCaster);
             }
 
             return m_ShadowCastersCulled.Count > 0;
