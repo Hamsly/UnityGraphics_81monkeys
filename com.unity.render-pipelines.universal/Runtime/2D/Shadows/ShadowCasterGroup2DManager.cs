@@ -10,6 +10,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public static List<ShadowCasterGroup2D> shadowCasterGroups { get; private set; } = null;
         public static List<ShadowCasterGroup2D> shadowCasterGroupsCulled { get; private set; } = null;
 
+        private static bool hasDoneInit = false;
 
         public static void AddShadowCasterGroupToList(ShadowCasterGroup2D shadowCaster, List<ShadowCasterGroup2D> list)
         {
@@ -62,9 +63,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public static void OptimizeShadows(Rect cameraBounds)
         {
-            shadowCasterGroupsCulled ??= new List<ShadowCasterGroup2D>();
+            if(shadowCasterGroups == null) return;
+
+            AssertLists();
 
             shadowCasterGroupsCulled.Clear();
+
 
             foreach (var shadowCasterGroup in shadowCasterGroups)
             {
@@ -84,8 +88,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (group == null)
                 return;
 
-            if (shadowCasterGroups == null)
-                shadowCasterGroups = new List<ShadowCasterGroup2D>();
+            AssertLists();
 
             AddShadowCasterGroupToList(group, shadowCasterGroups);
         }
@@ -94,6 +97,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             if (group != null && shadowCasterGroups != null)
                 RemoveShadowCasterGroupFromList(group, shadowCasterGroups);
+        }
+
+        private static void AssertLists()
+        {
+            if (hasDoneInit) return;
+
+            shadowCasterGroups ??= new List<ShadowCasterGroup2D>();
+            shadowCasterGroupsCulled ??= new List<ShadowCasterGroup2D>();
+            hasDoneInit = true;
         }
     }
 }

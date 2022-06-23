@@ -11,6 +11,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         List<ShadowCaster2D> m_ShadowCasters;
         List<ShadowCaster2D> m_ShadowCastersCulled;
 
+        private bool hasDoneInit = false;
+
         public List<ShadowCaster2D> GetShadowCasters() { return m_ShadowCasters; }
         public List<ShadowCaster2D> GetShadowCastersCulled() { return m_ShadowCastersCulled; }
 
@@ -18,7 +20,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public void RegisterShadowCaster2D(ShadowCaster2D shadowCaster2D)
         {
-            m_ShadowCasters ??= new List<ShadowCaster2D>();
+            AssertLists();
 
             m_ShadowCasters.Add(shadowCaster2D);
         }
@@ -31,8 +33,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public bool OptimizeShadows(Rect cameraBounds)
         {
-            m_ShadowCasters ??= new List<ShadowCaster2D>();
-            m_ShadowCastersCulled ??= new List<ShadowCaster2D>();
+            AssertLists();
 
             m_ShadowCastersCulled.Clear();
 
@@ -52,6 +53,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
 
             return m_ShadowCastersCulled.Count > 0;
+        }
+
+        private void AssertLists()
+        {
+            if (hasDoneInit) return;
+
+            m_ShadowCasters ??= new List<ShadowCaster2D>();
+            m_ShadowCastersCulled ??= new List<ShadowCaster2D>();
+            hasDoneInit = true;
         }
     }
 }
