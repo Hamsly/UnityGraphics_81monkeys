@@ -200,6 +200,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         protected void OnDisable()
         {
+            base.OnDisable();
             ShadowCasterGroup2DManager.RemoveFromShadowCasterGroup(this, m_ShadowCasterGroup);
         }
 

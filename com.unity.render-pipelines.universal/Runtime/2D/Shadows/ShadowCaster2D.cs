@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 
 namespace UnityEngine.Experimental.Rendering.Universal
 {
-    public class ShadowCaster2D : ShadowCasterGroup2D
+    public class ShadowCaster2D : ShadowCasterGroup2D , IQuadTreeNode
     {
         [SerializeField] protected Renderer[] m_SilhouettedRenderers = new Renderer[0];
         [SerializeField] protected bool m_HasRenderer = false;
@@ -20,8 +20,20 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] int[] m_ApplyToSortingLayers = null;
         [SerializeField] Renderer2DData.ShadowMaterialTypes m_materialType = Renderer2DData.ShadowMaterialTypes.MeshShadows;
 
-        protected Rect m_MeshBounds;
-        public Rect MeshBounds => m_MeshBounds;
+        private int tick;
+        private static int startTick = 0;
+        private const int tickCount = 16;
+
+        protected Rect MBounds;
+        public Rect Bounds
+        {
+            get
+            {
+                var p = transform.position;
+                //return new Rect(MBounds.x + p.x,MBounds.y + p.y,MBounds.width,MBounds.height);
+                return new Rect(p.x, p.y,0,0);
+            }
+        }
 
         int m_PreviousShadowGroup = 0;
         bool m_PreviousCastsShadows = true;
@@ -114,6 +126,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         protected void Awake()
         {
+            tick = startTick;
+
+            startTick += 1;
+            startTick %= tickCount;
+
+
             if (m_ApplyToSortingLayers == null)
                 m_ApplyToSortingLayers = SetDefaultSortingLayers();
         }
@@ -126,19 +144,47 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
 
             m_ShadowCasterGroup = null;
+
+
+        }
+        protected void Start()
+        {
+            if (!gameObject.isStatic)
+            {
+                ShadowCasterGroup2DManager.RegisterDynamicShadow(this);
+            }
+            else
+            {
+                ShadowCasterGroup2DManager.RegisterStaticShadow(this);
+            }
+        }
+
+        protected void OnDisable()
+        {
+            if (!gameObject.isStatic)
+            {
+                ShadowCasterGroup2DManager.UnregisterDynamicShadow(this);
+            }
+        }
+
+        protected virtual void OnUpdate()
+        {
+
         }
 
         public void Update()
         {
-            if (m_SilhouettedRenderers != null)
+            if (tick != 0)
             {
-                m_HasRenderer = m_SilhouettedRenderers.Length > 0;
-            }
-            else
-            {
-                m_HasRenderer = false;
-            }
+                tick -= 1;
 
+                return;
+            }
+            tick = tickCount;
+
+            OnUpdate();
+
+            m_HasRenderer = (m_SilhouettedRenderers?.Length ?? 0) > 0;
 
             m_PreviousShadowCasterGroup = m_ShadowCasterGroup;
             bool addedToNewGroup = ShadowCasterGroup2DManager.AddToShadowCasterGroup(this, ref m_ShadowCasterGroup);

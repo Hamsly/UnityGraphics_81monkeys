@@ -41,7 +41,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 if(shadowCaster == null) continue;
 
-                var b = shadowCaster.MeshBounds;
+                var b = shadowCaster.Bounds;
                 b.center += (Vector2)shadowCaster.transform.position;
 
                 if (cameraBounds.min.x <= b.max.x &&

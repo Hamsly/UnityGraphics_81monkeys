@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using Unity.Mathematics;
@@ -120,34 +121,53 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var lightPosition = light.transform.position;
             cmdBuffer.SetGlobalVector(k_LightPosID, lightPosition);
 
-            var shadowCasterGroups = ShadowCasterGroup2DManager.shadowCasterGroupsCulled;
-            if (shadowCasterGroups != null && shadowCasterGroups.Count > 0)
+
+            var rr = light.pointLightOuterRadius * 2;
+            /*
+            var lightRect = new Rect(lightPosition.x - light.pointLightOuterRadius,
+                lightPosition.y - light.pointLightOuterRadius,
+                rr,
+                rr);
+
+            */
+
+            var incrementingGroupIndex = 0;
+            var previousShadowGroupIndex = -1;
+
+            var shadowCasters = ShadowCasterGroup2DManager.shadowCastersCulled;
+            if (shadowCasters != null && shadowCasters.Count > 0)
             {
-                var incrementingGroupIndex = 0;
-                var previousShadowGroupIndex = -1;
+                var silhouettes = new List<ShadowCaster2D>();
 
-                foreach (var shadowCasterGroup in shadowCasterGroups)
+                // Draw the shadow casting group first, then draw the silhouettes..
+                foreach (var shadowCaster in shadowCasters)
                 {
-                    var shadowCasters = shadowCasterGroup.GetShadowCastersCulled();
-                    if (shadowCasters == null) continue;
+                    if (shadowCaster == null) continue;
+                    //if(!lightRect.Overlaps(shadowCaster.Bounds))  continue;
 
-                    var shadowGroupIndex = shadowCasterGroup.GetShadowGroup();
+                    var shadowGroupIndex = shadowCaster.GetShadowGroup();
                     if (LightUtility.CheckForChange(shadowGroupIndex, ref previousShadowGroupIndex) || shadowGroupIndex == 0)
                     {
+                        if (previousShadowGroupIndex != -1)
+                        {
+                            var removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
+                            foreach (var silhouette in silhouettes)
+                            {
+                                silhouette.ExcludeSilhouettes(cmdBuffer,layerToRender,removeSelfShadowMaterial);
+                            }
+
+                            silhouettes.Clear();
+                        }
+
                         incrementingGroupIndex++;
                     }
 
-                    // Draw the shadow casting group first, then draw the silhouettes..
-                    foreach (var shadowCaster in shadowCasters)
-                    {
-                        var shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
-                        shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
-                    }
+                    var shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
+                    shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
 
-                    var removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
-                    foreach (var shadowCaster in shadowCasters)
+                    if (shadowCaster.useRendererSilhouette)
                     {
-                        shadowCaster.ExcludeSilhouettes(cmdBuffer,layerToRender,removeSelfShadowMaterial);
+                        silhouettes.Add(shadowCaster);
                     }
                 }
             }

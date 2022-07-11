@@ -92,19 +92,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
             RecalculateBounds();
         }
 
-        protected void OnEnable()
+        protected new void OnEnable()
         {
+            base.OnEnable();
+
             if (m_Mesh == null || m_InstanceId != GetInstanceID())
             {
                 m_Mesh = new Mesh();
                 ShadowUtility.GenerateShadowMesh(m_Mesh, m_ShapePath);
                 m_InstanceId = GetInstanceID();
             }
-
-            m_ShadowCasterGroup = null;
         }
 
-        public void Update()
+        protected override void OnUpdate()
         {
             bool rebuildMesh = LightUtility.CheckForChange(m_ShapePathHash, ref m_PreviousPathHash);
             if (rebuildMesh)
@@ -113,9 +113,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                 RecalculateBounds();
             }
-
-            base.Update();
         }
+
 
         private void RecalculateBounds()
         {
@@ -139,7 +138,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 maxY = Mathf.Max(pp.y, maxY);
             }
 
-            m_MeshBounds = new Rect(new Vector2(minX,minY), new Vector2(maxX - minX, maxY - minY));
+            MBounds = new Rect(new Vector2(minX,minY), new Vector2(maxX - minX, maxY - minY));
         }
 
         private void OnDrawGizmosSelected()
@@ -160,7 +159,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             }
 
-            Gizmos.DrawWireCube(m_MeshBounds.center + (Vector2)transform.position,m_MeshBounds.size);
+            Gizmos.DrawWireCube(MBounds.center + (Vector2)transform.position,MBounds.size);
         }
 
         public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material)

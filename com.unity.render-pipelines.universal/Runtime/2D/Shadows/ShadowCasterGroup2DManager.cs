@@ -2,15 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace UnityEngine.Experimental.Rendering.Universal
 {
     internal class ShadowCasterGroup2DManager
     {
         public static List<ShadowCasterGroup2D> shadowCasterGroups { get; private set; } = null;
-        public static List<ShadowCasterGroup2D> shadowCasterGroupsCulled { get; private set; } = null;
+        public static List<ShadowCaster2D> shadowCastersCulled = new List<ShadowCaster2D>();
+
+        private static List<ShadowCaster2D> dynamicShadows = new List<ShadowCaster2D>();
+        private static List<ShadowCaster2D> staticShadows = new List<ShadowCaster2D>();
 
         private static bool hasDoneInit = false;
+
+        public ShadowCasterGroup2DManager()
+        {
+            Shadow2DWorldManager.OnInit += OnShadowWorldInit;
+
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
+        }
 
         public static void AddShadowCasterGroupToList(ShadowCasterGroup2D shadowCaster, List<ShadowCasterGroup2D> list)
         {
@@ -27,6 +38,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public static void RemoveShadowCasterGroupFromList(ShadowCasterGroup2D shadowCaster, List<ShadowCasterGroup2D> list)
         {
             list.Remove(shadowCaster);
+        }
+
+        private void OnSceneUnloaded(Scene scene)
+        {
+            ClearAllStaticShadowReferences();
+        }
+
+        private static void OnShadowWorldInit()
+        {
+            foreach (var caster in staticShadows)
+            {
+                Shadow2DWorldManager.Instance.RegisterStaticShadow(caster);
+            }
         }
 
         static CompositeShadowCaster2D FindTopMostCompositeShadowCaster(ShadowCaster2D shadowMeshCaster)
@@ -61,19 +85,53 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         }
 
+        public static void RegisterStaticShadow(ShadowCaster2D shadowCaster)
+        {
+            if (!staticShadows.Contains(shadowCaster))
+            {
+                staticShadows.Add(shadowCaster);
+            }
+
+            if (Shadow2DWorldManager.Instance?.HasDoneInit ?? false)
+            {
+                Shadow2DWorldManager.Instance.RegisterStaticShadow(shadowCaster);
+            }
+        }
+
+        public static void RegisterDynamicShadow(ShadowCaster2D shadowCaster)
+        {
+            if (!dynamicShadows.Contains(shadowCaster))
+            {
+                dynamicShadows.Add(shadowCaster);
+            }
+        }
+
+        public static void UnregisterDynamicShadow(ShadowCaster2D shadowCaster)
+        {
+            dynamicShadows.Remove(shadowCaster);
+        }
+
+        public static List<ShadowCaster2D> GetDynamicShadows()
+        {
+            return dynamicShadows;
+        }
+
+        public static void ClearAllStaticShadowReferences()
+        {
+            staticShadows?.Clear();
+        }
+
         public static void OptimizeShadows(Rect cameraBounds)
         {
             if(shadowCasterGroups == null) return;
 
             AssertLists();
 
-            shadowCasterGroupsCulled.Clear();
+            shadowCastersCulled.Clear();
 
-
-            foreach (var shadowCasterGroup in shadowCasterGroups)
+            if (Shadow2DWorldManager.Instance != null)
             {
-                if(shadowCasterGroup.OptimizeShadows(cameraBounds))
-                    shadowCasterGroupsCulled.Add(shadowCasterGroup);
+                Shadow2DWorldManager.Instance.GetShadowCasters(ref shadowCastersCulled,cameraBounds);
             }
         }
 
@@ -104,7 +162,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (hasDoneInit) return;
 
             shadowCasterGroups ??= new List<ShadowCasterGroup2D>();
-            shadowCasterGroupsCulled ??= new List<ShadowCasterGroup2D>();
+            shadowCastersCulled ??= new List<ShadowCaster2D>();
             hasDoneInit = true;
         }
     }
