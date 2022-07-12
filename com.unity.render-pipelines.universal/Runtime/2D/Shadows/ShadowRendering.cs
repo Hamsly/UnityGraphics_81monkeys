@@ -121,15 +121,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var lightPosition = light.transform.position;
             cmdBuffer.SetGlobalVector(k_LightPosID, lightPosition);
 
-
-            var rr = light.pointLightOuterRadius * 2;
-            /*
-            var lightRect = new Rect(lightPosition.x - light.pointLightOuterRadius,
-                lightPosition.y - light.pointLightOuterRadius,
-                rr,
-                rr);
-
-            */
+            var lightRange = Mathf.Max(light.pointLightOuterRadius * 2,4);
 
             var incrementingGroupIndex = 0;
             var previousShadowGroupIndex = -1;
@@ -146,7 +138,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     //if(!lightRect.Overlaps(shadowCaster.Bounds))  continue;
 
                     var shadowGroupIndex = shadowCaster.GetShadowGroup();
-                    if (LightUtility.CheckForChange(shadowGroupIndex, ref previousShadowGroupIndex) || shadowGroupIndex == 0)
+                    if (LightUtility.CheckForChange(shadowGroupIndex, ref previousShadowGroupIndex))
                     {
                         if (previousShadowGroupIndex != -1)
                         {
@@ -162,6 +154,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
                         incrementingGroupIndex++;
                     }
 
+                    var xDiff = shadowCaster.Bounds.x - lightPosition.x;
+                    var yDiff = shadowCaster.Bounds.y - lightPosition.y;
+                    if(xDiff > lightRange || xDiff < -lightRange ||
+                       yDiff > lightRange || yDiff < -lightRange)
+                        continue;
+
                     var shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
                     shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
 
@@ -169,6 +167,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     {
                         silhouettes.Add(shadowCaster);
                     }
+                }
+
+                /// Run the masking one last time.
+                var mat = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
+                foreach (var silhouette in silhouettes)
+                {
+                    silhouette.ExcludeSilhouettes(cmdBuffer,layerToRender,mat);
                 }
             }
         }

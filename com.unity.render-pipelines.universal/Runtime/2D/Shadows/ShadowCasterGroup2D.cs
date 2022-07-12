@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +8,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 {
     public abstract class ShadowCasterGroup2D : MonoBehaviour
     {
-        [SerializeField] internal int m_ShadowGroup = 0;
+        public static int nextGroupID = 0;
+        internal int m_ShadowGroup;
         List<ShadowCaster2D> m_ShadowCasters;
         List<ShadowCaster2D> m_ShadowCastersCulled;
 
@@ -16,43 +18,32 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public List<ShadowCaster2D> GetShadowCasters() { return m_ShadowCasters; }
         public List<ShadowCaster2D> GetShadowCastersCulled() { return m_ShadowCastersCulled; }
 
-        public int GetShadowGroup() { return m_ShadowGroup; }
+        protected void Awake()
+        {
+            m_ShadowGroup = nextGroupID++;
+        }
+
+        public int GetShadowGroup(){ return m_ShadowGroup; }
 
         public void RegisterShadowCaster2D(ShadowCaster2D shadowCaster2D)
         {
             AssertLists();
 
             m_ShadowCasters.Add(shadowCaster2D);
+
+            shadowCaster2D.m_ShadowGroup = m_ShadowGroup;
+            shadowCaster2D.ForceUpdate();
         }
 
         public void UnregisterShadowCaster2D(ShadowCaster2D shadowCaster2D)
         {
             if (m_ShadowCasters != null)
-                m_ShadowCasters.Remove(shadowCaster2D);
-        }
-
-        public bool OptimizeShadows(Rect cameraBounds)
-        {
-            AssertLists();
-
-            m_ShadowCastersCulled.Clear();
-
-            foreach (var shadowCaster in m_ShadowCasters)
             {
-                if(shadowCaster == null) continue;
+                m_ShadowCasters.Remove(shadowCaster2D);
 
-                var b = shadowCaster.Bounds;
-                b.center += (Vector2)shadowCaster.transform.position;
-
-                if (cameraBounds.min.x <= b.max.x &&
-                    cameraBounds.max.x >= b.min.x &&
-                    cameraBounds.min.y <= b.max.y &&
-                    cameraBounds.max.y >= b.min.y)
-
-                    m_ShadowCastersCulled.Add(shadowCaster);
+                shadowCaster2D.m_ShadowGroup = nextGroupID++;
+                shadowCaster2D.ForceUpdate();
             }
-
-            return m_ShadowCastersCulled.Count > 0;
         }
 
         private void AssertLists()

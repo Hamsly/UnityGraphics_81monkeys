@@ -42,7 +42,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             get => m_FalloffRate;
         }
 
-        private void Awake()
+        private new void Awake()
         {
             base.Awake();
 

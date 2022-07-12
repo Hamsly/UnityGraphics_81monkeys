@@ -24,6 +24,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private static int startTick = 0;
         private const int tickCount = 16;
 
+        private bool forceUpdate;
+
         protected Rect MBounds;
         public Rect Bounds
         {
@@ -124,8 +126,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
             return allLayers;
         }
 
-        protected void Awake()
+        protected new void Awake()
         {
+            base.Awake();
+
             tick = startTick;
 
             startTick += 1;
@@ -172,15 +176,28 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         }
 
+        public void ForceUpdate()
+        {
+            forceUpdate = true;
+        }
+
         public void Update()
         {
-            if (tick != 0)
+            if (!forceUpdate)
             {
-                tick -= 1;
+                if (tick != 0)
+                {
+                    tick -= 1;
 
-                return;
+                    return;
+                }
+
+                tick = tickCount;
             }
-            tick = tickCount;
+            else
+            {
+                forceUpdate = false;
+            }
 
             OnUpdate();
 
