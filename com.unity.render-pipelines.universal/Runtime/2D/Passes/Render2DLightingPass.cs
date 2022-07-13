@@ -282,7 +282,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 var cameraRect = camera.OrthographicBounds();
 
 #if UNITY_EDITOR
-                var cam = GameObject.FindWithTag("ShadowDebugCamera");
+                var cam = GameObject.FindWithTag("MainCamera");
                 if (cam != null)
                 {
                     if (cam.TryGetComponent(out Camera gameCam))
