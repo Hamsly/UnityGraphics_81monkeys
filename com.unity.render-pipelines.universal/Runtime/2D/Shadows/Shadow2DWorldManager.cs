@@ -27,14 +27,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private bool currentShadowTree = false;
         private bool prevShadowTree = true;
 
-
-        public bool DebugStaticShadows = false;
-        public bool DebugDynamicShadows = false;
-        public bool DebugDynamicBuildingShadows = false;
+        [Space]
+        [SerializeField] private float DebugOffset = 0.1f;
+        [SerializeField] private bool DebugStaticShadows = false;
+        [SerializeField] private bool DebugDynamicShadows = false;
+        [SerializeField] private bool DebugDynamicBuildingShadows = false;
 
         public bool HasDoneInit { get; private set; } = false;
 
-        private void Awake()
+        private void OnEnable()
         {
             if (WorldRect.width != 0 && WorldRect.height != 0)
             {
@@ -43,18 +44,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         }
 
-        private void OnValidate()
-        {
-            InitShadow2DWorld(WorldRect);
-        }
-
         public Shadow2DWorldManager()
         {
             HasDoneInit = false;
 
             Instance = this;
         }
-
 
         public void InitShadow2DWorld(Rect rect)
         {
@@ -122,19 +117,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             if (DebugStaticShadows)
             {
-                staticShadowTree.DrawGizmo(1);
+                staticShadowTree.DrawGizmo(DebugOffset);
             }
 
             if (DebugDynamicShadows)
             {
                 QuadTree<ShadowCaster2D> workingTree = currentShadowTree ? shadowTreeA : shadowTreeB;
-                workingTree.DrawGizmo(1);
+                workingTree.DrawGizmo(DebugOffset);
             }
 
             if (DebugDynamicBuildingShadows)
             {
                 QuadTree<ShadowCaster2D> workingTree = !currentShadowTree ? shadowTreeA : shadowTreeB;
-                workingTree.DrawGizmo(1);
+                workingTree.DrawGizmo(DebugOffset);
             }
 
         }
