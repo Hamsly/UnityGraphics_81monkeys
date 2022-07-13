@@ -126,7 +126,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var incrementingGroupIndex = 0;
             var previousShadowGroupIndex = -1;
 
-            var shadowCasters = ShadowCasterGroup2DManager.shadowCastersCulled;
+            var shadowCasters = ShadowCasterGroup2DManager.ShadowCastersCulled;
             if (shadowCasters != null && shadowCasters.Count > 0)
             {
                 var silhouettes = new List<ShadowCaster2D>();

@@ -22,9 +22,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         private int tick;
         private static int startTick = 0;
-        private const int tickCount = 16;
+        private const int TICK_COUNT = 0x0F;
 
-        private bool forceUpdate;
+        private bool isStatic = false;
+
+        private bool forceUpdate = false;
 
         protected Rect MBounds;
         public Rect Bounds
@@ -133,7 +135,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             tick = startTick;
 
             startTick += 1;
-            startTick %= tickCount;
+            startTick &= TICK_COUNT;
 
 
             if (m_ApplyToSortingLayers == null)
@@ -149,11 +151,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             m_ShadowCasterGroup = null;
 
-
+            isStatic = gameObject.isStatic;
         }
         protected void Start()
         {
-            if (!gameObject.isStatic)
+            if (isStatic)
             {
                 ShadowCasterGroup2DManager.RegisterDynamicShadow(this);
             }
@@ -185,6 +187,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             if (!forceUpdate)
             {
+                if (isStatic) return;
+
                 if (tick != 0)
                 {
                     tick -= 1;
@@ -192,12 +196,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     return;
                 }
 
-                tick = tickCount;
+                tick = TICK_COUNT;
             }
-            else
-            {
-                forceUpdate = false;
-            }
+
+            forceUpdate = false;
+
 
             OnUpdate();
 

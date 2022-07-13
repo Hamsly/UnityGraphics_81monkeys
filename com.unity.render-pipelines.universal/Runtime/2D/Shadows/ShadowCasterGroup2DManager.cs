@@ -8,8 +8,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 {
     internal class ShadowCasterGroup2DManager
     {
-        public static List<ShadowCasterGroup2D> shadowCasterGroups { get; private set; } = null;
-        public static List<ShadowCaster2D> shadowCastersCulled = new List<ShadowCaster2D>();
+        private static List<ShadowCasterGroup2D> shadowCasterGroups = new List<ShadowCasterGroup2D>();
+        public static List<ShadowCaster2D> ShadowCastersCulled = new List<ShadowCaster2D>();
 
         private static List<ShadowCaster2D> dynamicShadows = new List<ShadowCaster2D>();
         private static List<ShadowCaster2D> staticShadows = new List<ShadowCaster2D>();
@@ -60,8 +60,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var transformToCheck = shadowMeshCaster.transform.parent;
             while (transformToCheck != null)
             {
-                CompositeShadowCaster2D currentGroup;
-                if (transformToCheck.TryGetComponent<CompositeShadowCaster2D>(out currentGroup))
+                if (transformToCheck.TryGetComponent<CompositeShadowCaster2D>(out var currentGroup))
                     retGroup = currentGroup;
 
                 transformToCheck = transformToCheck.parent;
@@ -92,7 +91,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 staticShadows.Add(shadowCaster);
             }
 
-            if (Shadow2DWorldManager.Instance?.HasDoneInit ?? false)
+            if (Shadow2DWorldManager.Instance is { HasDoneInit: true })
             {
                 Shadow2DWorldManager.Instance.RegisterStaticShadow(shadowCaster);
             }
@@ -125,13 +124,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             if(shadowCasterGroups == null) return;
 
-            AssertLists();
-
-            shadowCastersCulled.Clear();
+            ShadowCastersCulled.Clear();
 
             if (Shadow2DWorldManager.Instance != null)
             {
-                Shadow2DWorldManager.Instance.GetShadowCasters(ref shadowCastersCulled,cameraBounds);
+                Shadow2DWorldManager.Instance.GetShadowCasters(ref ShadowCastersCulled,cameraBounds);
             }
         }
 
@@ -146,8 +143,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (group == null)
                 return;
 
-            AssertLists();
-
             AddShadowCasterGroupToList(group, shadowCasterGroups);
         }
 
@@ -157,13 +152,5 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 RemoveShadowCasterGroupFromList(group, shadowCasterGroups);
         }
 
-        private static void AssertLists()
-        {
-            if (hasDoneInit) return;
-
-            shadowCasterGroups ??= new List<ShadowCasterGroup2D>();
-            shadowCastersCulled ??= new List<ShadowCaster2D>();
-            hasDoneInit = true;
-        }
     }
 }

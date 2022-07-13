@@ -267,6 +267,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
         }
 
+        //Old unused Light drawing
+        /*
         public static void RenderLightVolumes(this IRenderPass2D pass, RenderingData renderingData, CommandBuffer cmd, int layerToRender, int endLayerValue, RenderTargetIdentifier renderTexture, RenderTargetIdentifier depthTexture, List<Light2D> lights)
         {
             var maxShadowTextureCount = ShadowRendering.maxTextureCount;
@@ -360,6 +362,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 lightIndex += batchedLights;
             }
         }
+        */
 
         public static void SetShapeLightShaderGlobals(this IRenderPass2D pass, CommandBuffer cmd)
         {

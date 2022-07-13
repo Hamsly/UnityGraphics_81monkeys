@@ -6,6 +6,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
         _MaskTex("Mask", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}
         _OffsetMap("Offset Map", 2D) = "black" {}
+        [PerRendererData] _ObjectOffset("Object Offset", Vector) = (0,0,0,0)
 
         // Legacy properties. They're here so that materials using this shader can gracefully fallback to the legacy sprite shader.
         [HideInInspector] _Color("Tint", Color) = (1,1,1,1)
@@ -67,6 +68,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
             SAMPLER(sampler_OffsetMap);
 
             half4 _MainTex_ST;
+            float4 _ObjectOffset;
 
             #if USE_SHAPE_LIGHT_TYPE_0
             SHAPE_LIGHT(0)
@@ -86,6 +88,8 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
             Varyings CombinedShapeLightVertex(Attributes v)
             {
+                const int pixelsPerUnit = 32;
+
                 Varyings o = (Varyings)0;
 
                 UNITY_SETUP_INSTANCE_ID(v);
@@ -100,7 +104,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
                 o.lightingUV = float2(ComputeScreenPos(o.positionCS).xy);
 
-                o.scale = (lp - o.lightingUV) / 32;
+                o.scale = (lp - o.lightingUV) / pixelsPerUnit;
 
                 o.color = v.color;
                 return o;
@@ -115,8 +119,13 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
                 float4 hh = SAMPLE_TEXTURE2D(_OffsetMap,sampler_OffsetMap, i.uv);
 
-                float xx = ((hh.r * 256) - 128);
-                float yy = ((hh.b * 256) - 128);
+                int g = hh.g * 128;
+                float xx = ((hh.r * 255) - 127) + _ObjectOffset.x;
+                float yy = ((hh.b * 255) - 127) + _ObjectOffset.y;
+
+                xx += (g & 0xF) * 256 * sign(xx);
+                yy += (g >> 4 & 0xF) * 256 * sign(xx);
+
                 float3 offset = float3(xx * (i.scale.x),-yy * (i.scale.y),0);
                 return CombinedShapeLightShared(main, mask, i.lightingUV + offset);
             }

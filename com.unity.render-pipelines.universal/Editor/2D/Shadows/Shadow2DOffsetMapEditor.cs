@@ -22,18 +22,18 @@ namespace UnityEditor.Experimental.Rendering.Universal
 {
     internal static class Shadow2DOffsetMapEditorContent
     {
-        internal static readonly Texture cursorIconTL = Icon("SOTE_CursorTL");
-        internal static readonly Texture cursorIconTR = Icon("SOTE_CursorTR");
-        internal static readonly Texture cursorIconBL = Icon("SOTE_CursorBL");
-        internal static readonly Texture cursorIconBR = Icon("SOTE_CursorBR");
-        internal static readonly Texture cursorIconTarget = Icon("SOTE_CursorTarget");
+        internal static readonly Texture CursorIconTL = Icon("SOTE_CursorTL");
+        internal static readonly Texture CursorIconTR = Icon("SOTE_CursorTR");
+        internal static readonly Texture CursorIconBL = Icon("SOTE_CursorBL");
+        internal static readonly Texture CursorIconBR = Icon("SOTE_CursorBR");
+        internal static readonly Texture CursorIconTarget = Icon("SOTE_CursorTarget");
 
-        internal static readonly Texture toolIconFree = Icon("SOTE_ToolIconFree");
-        internal static readonly Texture toolIconLine = Icon("SOTE_ToolIconLine");
-        internal static readonly Texture toolIconRect = Icon("SOTE_ToolIconRect");
-        internal static readonly Texture toolIconRemap = Icon("SOTE_ToolIconRemap");
-        internal static readonly Texture toolIconNoise = Icon("SOTE_ToolNoise");
-        internal static readonly Texture toolIconUndo = Icon("SOTE_Undo");
+        internal static readonly Texture ToolIconFree = Icon("SOTE_ToolIconFree");
+        internal static readonly Texture ToolIconLine = Icon("SOTE_ToolIconLine");
+        internal static readonly Texture ToolIconRect = Icon("SOTE_ToolIconRect");
+        internal static readonly Texture ToolIconRemap = Icon("SOTE_ToolIconRemap");
+        internal static readonly Texture ToolIconNoise = Icon("SOTE_ToolNoise");
+        internal static readonly Texture ToolIconUndo = Icon("SOTE_Undo");
 
         internal static Texture Icon(string name)
         {
@@ -555,8 +555,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
         /// <param name="ctrl"></param>
         private void RemapTool(int button, ButtonState buttonState, bool ctrl)
         {
-
-
             if (buttonState == ButtonState.Pressed)
             {
                 _imageCursorPosStart = _imageCursorPos;
@@ -671,26 +669,10 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             if (x < 0 || x >= _workingTexture.width || y < 0 || y >= _workingTexture.height) return;
 
-            var xLock = xLockPosition;
-            var yLock = (_workingTexture.height) - (yLockPosition + 1);
-            var xx = ((lockXTarget) ? x - xLock : brushOffset.x);
-            var yy = ((lockYTarget) ? y - yLock : brushOffset.y);
-
+            var offset = GetOffsetFromPoint(x,y);
 
             var prevCol = _workingTexture.GetPixel(x, y);
-            Color col;
-            if (!reset)
-            {
-                var r = (128 + (-xx % 127)) / 255f;
-                var g = 0;
-                var b = (128 + (yy % 127)) / 255f;
-
-                col = new Color(r, g, b, 1);
-            }
-            else
-            {
-                col = new Color(0.5f, 0, 0.5f, 1);
-            }
+            var col = !reset ? OffsetToColor(offset.x, offset.y) : new Color(0.5f, 0, 0.5f, 1);
 
             if (!editX)
             {
@@ -703,6 +685,31 @@ namespace UnityEditor.Experimental.Rendering.Universal
             }
 
             _workingTexture.SetPixel(x,y,col);
+        }
+
+
+        private Vector2Int GetOffsetFromPoint(int brushX, int brushY)
+        {
+            var xLock = xLockPosition;
+            var yLock = (_workingTexture.height) - (yLockPosition + 1);
+            var xx = ((lockXTarget) ? brushX - xLock : brushOffset.x);
+            var yy = ((lockYTarget) ? brushY- yLock : brushOffset.y);
+
+            return new Vector2Int(xx, yy);
+        }
+
+        private Color OffsetToColor(int x, int y)
+        {
+            float r = (128 + (-x % 127)) / 255f;
+            float b = (128 + (y % 127)) / 255f;
+
+            int gx = Mathf.Abs(x) / 127;
+            int gy = Mathf.Abs(y) / 127;
+
+            int gxy = (gx & 0xf) | ((gy & 0xf) << 4);
+            float g = gxy / 255f;
+
+            return new Color(r, g, b, 1);
         }
 
 
@@ -793,8 +800,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         {
             if (_previewTexture == null)
             {
-                _previewTexture = new Texture2D((int)_workingTexture.width,
-                    (int)_workingTexture.height)
+                _previewTexture = new Texture2D(_workingTexture.width,_workingTexture.height)
                 {
                     filterMode = FilterMode.Point
                 };
@@ -823,7 +829,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 if (_previewContrast > 0)
                 {
                     col.r = Mathf.Repeat(((col.r - 0.5f) * (1 + _previewContrast)) + 0.5f,1);
-                    col.g = 0;
+                    col.g = Mathf.Repeat(((col.g) * (1 + _previewContrast)),1);
                     col.b = Mathf.Repeat(((col.b - 0.5f) * (1 + _previewContrast)) + 0.5f,1);
                 }
 
@@ -1292,9 +1298,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
                     }
 
                     GUI.DrawTexture(new Rect(t1.x - 0.5f, t1.y - 0.5f, 2, 2),
-                        Shadow2DOffsetMapEditorContent.cursorIconTarget, ScaleMode.ScaleToFit, true);
+                        Shadow2DOffsetMapEditorContent.CursorIconTarget, ScaleMode.ScaleToFit, true);
                     GUI.DrawTexture(new Rect(t2.x - 0.5f, t2.y - 0.5f, 2, 2),
-                        Shadow2DOffsetMapEditorContent.cursorIconTarget, ScaleMode.ScaleToFit, true);
+                        Shadow2DOffsetMapEditorContent.CursorIconTarget, ScaleMode.ScaleToFit, true);
 
 
                     if(_mouseIsHeld && !_isMovingRemapTargets)
@@ -1325,17 +1331,17 @@ namespace UnityEditor.Experimental.Rendering.Universal
             }
 
 
-            DrawCursorCorner(minX, minY, Shadow2DOffsetMapEditorContent.cursorIconTL);
-            DrawCursorCorner(maxX, minY, Shadow2DOffsetMapEditorContent.cursorIconTR);
-            DrawCursorCorner(minX, maxY, Shadow2DOffsetMapEditorContent.cursorIconBL);
-            DrawCursorCorner(maxX, maxY, Shadow2DOffsetMapEditorContent.cursorIconBR);
+            DrawCursorCorner(minX, minY, Shadow2DOffsetMapEditorContent.CursorIconTL);
+            DrawCursorCorner(maxX, minY, Shadow2DOffsetMapEditorContent.CursorIconTR);
+            DrawCursorCorner(minX, maxY, Shadow2DOffsetMapEditorContent.CursorIconBL);
+            DrawCursorCorner(maxX, maxY, Shadow2DOffsetMapEditorContent.CursorIconBR);
 
             if (selectedTool != 3)
             {
                 var targetPoint = _cursorPos + brushTargetOffset + new Vector2(0.5f, 0.5f);
 
                 GUI.DrawTexture(new Rect(targetPoint.x - 1f, targetPoint.y - 1f, 2, 2),
-                    Shadow2DOffsetMapEditorContent.cursorIconTarget, ScaleMode.ScaleToFit, true);
+                    Shadow2DOffsetMapEditorContent.CursorIconTarget, ScaleMode.ScaleToFit, true);
             }
         }
 
@@ -1504,16 +1510,16 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             selectedTool = GUILayout.SelectionGrid(selectedTool, new[]
             {
-                new GUIContent(Shadow2DOffsetMapEditorContent.toolIconFree, "Free draw tool"),
-                new GUIContent(Shadow2DOffsetMapEditorContent.toolIconLine, "Line tool"),
-                new GUIContent(Shadow2DOffsetMapEditorContent.toolIconRect, "Rectangle tool"),
-                new GUIContent(Shadow2DOffsetMapEditorContent.toolIconRemap, "Remap tool"),
-                new GUIContent(Shadow2DOffsetMapEditorContent.toolIconNoise, "Noise tool"),
+                new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconFree, "Free draw tool"),
+                new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconLine, "Line tool"),
+                new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconRect, "Rectangle tool"),
+                new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconRemap, "Remap tool"),
+                new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconNoise, "Noise tool"),
             }, 5);
 
             EditorGUILayout.Space(20);
 
-            if(GUILayout.Button(new GUIContent(Shadow2DOffsetMapEditorContent.toolIconUndo, "UNDO")))
+            if(GUILayout.Button(new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconUndo, "UNDO")))
             {
                 HandleUndo();
             }
