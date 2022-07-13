@@ -3,6 +3,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using Unity.Mathematics;
 
+
 namespace UnityEngine.Experimental.Rendering.Universal
 {
     internal static class ShadowRendering
@@ -115,6 +116,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public static void RenderShadows(IRenderPass2D pass, RenderingData renderingData, CommandBuffer cmdBuffer, int layerToRender, Light2D light, float shadowIntensity, RenderTargetIdentifier renderTexture)
         {
+
             cmdBuffer.SetRenderTarget(renderTexture, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmdBuffer.ClearRenderTarget(true, true, Color.black);  // clear stencil
 
@@ -135,6 +137,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 foreach (var shadowCaster in shadowCasters)
                 {
                     if (shadowCaster == null) continue;
+
                     //if(!lightRect.Overlaps(shadowCaster.Bounds))  continue;
 
                     var shadowGroupIndex = shadowCaster.GetShadowGroup();

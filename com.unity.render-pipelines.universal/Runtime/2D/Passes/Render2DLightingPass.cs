@@ -279,7 +279,20 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                 var desc = this.GetBlendStyleRenderTextureDesc(renderingData);
 
-                ShadowCasterGroup2DManager.OptimizeShadows(camera.OrthographicBounds());
+                var cameraRect = camera.OrthographicBounds();
+
+#if UNITY_EDITOR
+                var cam = GameObject.FindWithTag("ShadowDebugCamera");
+                if (cam != null)
+                {
+                    if (cam.TryGetComponent(out Camera gameCam))
+                    {
+                        cameraRect = gameCam.OrthographicBounds();
+                    }
+                }
+#endif
+
+                ShadowCasterGroup2DManager.OptimizeShadows(cameraRect);
 
                 var layerBatches = LayerUtility.CalculateBatches(m_Renderer2DData.lightCullResult, out var batchCount);
                 var batchesDrawn = 0;

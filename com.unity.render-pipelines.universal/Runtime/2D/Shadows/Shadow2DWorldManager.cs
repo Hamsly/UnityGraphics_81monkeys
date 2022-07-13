@@ -27,6 +27,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private bool currentShadowTree = false;
         private bool prevShadowTree = true;
 
+
+        public bool DebugStaticShadows = false;
+        public bool DebugDynamicShadows = false;
+        public bool DebugDynamicBuildingShadows = false;
+
         public bool HasDoneInit { get; private set; } = false;
 
         private void Awake()
@@ -111,6 +116,27 @@ namespace UnityEngine.Experimental.Rendering.Universal
             currentTree?.GetNodes(ref casters,rect);
 
             casters.Sort((a, b) => Mathf.Clamp(a.GetShadowGroup() - b.GetShadowGroup(),-1,1));
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (DebugStaticShadows)
+            {
+                staticShadowTree.DrawGizmo(1);
+            }
+
+            if (DebugDynamicShadows)
+            {
+                QuadTree<ShadowCaster2D> workingTree = currentShadowTree ? shadowTreeA : shadowTreeB;
+                workingTree.DrawGizmo(1);
+            }
+
+            if (DebugDynamicBuildingShadows)
+            {
+                QuadTree<ShadowCaster2D> workingTree = !currentShadowTree ? shadowTreeA : shadowTreeB;
+                workingTree.DrawGizmo(1);
+            }
+
         }
     }
 }

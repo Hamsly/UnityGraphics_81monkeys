@@ -1,6 +1,6 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
+
 
 
 namespace UnityEngine.Experimental.Rendering.Universal
@@ -10,6 +10,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public Rect Bounds { get; }
     }
 
+    [Serializable]
     public class QuadTree<T> where T : IQuadTreeNode
     {
         private Rect bounds;
@@ -29,6 +30,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private const int TOP_LEFT = 1;
         private const int BOT_RIGHT = 2;
         private const int BOT_LEFT = 3;
+
+#if UNITY_EDITOR
+        private float accessed = 0;
+#endif
 
         public QuadTree(Rect bounds,int unitSize = 1)
         {
@@ -97,7 +102,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         /// <summary>
         /// Split the tree and by creating the sub trees
         /// </summary>
-        private void split()
+        private void Split()
         {
             var subWidth = bounds.width / 2;
             var subHeight = bounds.height / 2;
@@ -132,7 +137,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             if (subTrees[0] == null)
             {
-                split();
+                Split();
             }
 
             int i = 0;
@@ -177,23 +182,45 @@ namespace UnityEngine.Experimental.Rendering.Universal
         /// <param name="searchRect">The rect to search the quad tree with</param>
         public void GetNodes(ref List<T> nodeList, Rect searchRect)
         {
-            var quadrant = GetQuadrant(searchRect);
+            if(!searchRect.Overlaps(bounds)) return;
+
+#if UNITY_EDITOR
+            accessed += 1;
+#endif
             if (subTrees[0] != null)
             {
-                if (quadrant != NONE)
+                foreach (var tree in subTrees)
                 {
-                    subTrees[quadrant].GetNodes(ref nodeList, searchRect);
-                }
-                else
-                {
-                    foreach (var tree in subTrees)
-                    {
-                        tree.GetNodes(ref nodeList, searchRect);
-                    }
+                    tree.GetNodes(ref nodeList, searchRect);
                 }
             }
 
-            nodeList.AddRange(nodes);
+           nodeList.AddRange(nodes);
+        }
+
+        public void DrawGizmo(float buffer = 0)
+        {
+
+#if UNITY_EDITOR
+            Gizmos.color = Color.Lerp(Color.yellow , Color.cyan,accessed);
+            accessed = 0;
+#endif
+
+            var p1 = new Vector2(bounds.xMin + buffer, bounds.yMin + buffer);
+            var p2 = new Vector2(bounds.xMin + buffer, bounds.yMax - buffer);
+            var p3 = new Vector2(bounds.xMax - buffer, bounds.yMin + buffer);
+            var p4 = new Vector2(bounds.xMax - buffer, bounds.yMax - buffer);
+
+            Gizmos.DrawLine(p1, p2);
+            Gizmos.DrawLine(p2, p4);
+            Gizmos.DrawLine(p3, p4);
+            Gizmos.DrawLine(p1, p3);
+
+            if (subTrees[0] == null) return;
+            subTrees[0].DrawGizmo(buffer);
+            subTrees[1].DrawGizmo(buffer);
+            subTrees[2].DrawGizmo(buffer);
+            subTrees[3].DrawGizmo(buffer);
         }
     }
 }

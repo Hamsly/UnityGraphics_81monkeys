@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 {
     public class ShadowCaster2D : ShadowCasterGroup2D , IQuadTreeNode
     {
-        [SerializeField] protected Renderer[] m_SilhouettedRenderers = new Renderer[0];
+        [SerializeField] protected Renderer[] m_SilhouettedRenderers;
         [SerializeField] protected bool m_HasRenderer = false;
         [SerializeField] protected bool m_UseRendererSilhouette = true;
         [SerializeField] protected float m_ZPosition = 0f;
@@ -132,6 +132,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             base.Awake();
 
+            ForceUpdate();
+
             tick = startTick;
 
             startTick += 1;
@@ -144,6 +146,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         protected void OnEnable()
         {
+            m_SilhouettedRenderers = new Renderer[0];
+
             if (m_InstanceId != GetInstanceID())
             {
                 m_InstanceId = GetInstanceID();
