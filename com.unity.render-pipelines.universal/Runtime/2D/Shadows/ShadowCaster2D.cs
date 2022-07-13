@@ -159,7 +159,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         }
         protected void Start()
         {
-            if (isStatic)
+            if (!isStatic)
             {
                 ShadowCasterGroup2DManager.RegisterDynamicShadow(this);
             }
