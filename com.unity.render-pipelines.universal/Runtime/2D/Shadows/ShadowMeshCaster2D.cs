@@ -18,7 +18,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
     public class ShadowMeshCaster2D : ShadowCaster2D
     {
         [SerializeField] float m_Height = 1f;
-        [SerializeField] float m_FalloffRate = 1f;
         [SerializeField] Vector3[] m_ShapePath = null;
         [SerializeField] int m_ShapePathHash = 0;
         [SerializeField] Mesh m_Mesh;
@@ -35,11 +34,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             set => m_Height = value;
             get => m_Height;
-        }
-        public float falloffRate
-        {
-            set => m_FalloffRate = value;
-            get => m_FalloffRate;
         }
 
         private new void Awake()
@@ -115,6 +109,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
         }
 
+        public void SetMesh(Mesh mesh)
+        {
+            m_Mesh = mesh;
+        }
 
         private void RecalculateBounds()
         {
@@ -122,11 +120,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var maxX = float.MinValue;
             var minY = float.MaxValue;
             var maxY = float.MinValue;
+
             foreach (var point in shapePath)
             {
                 Vector3 pp = point;
-                var transformRef = transform;
-                var lossyScale = transformRef.lossyScale;
+
+                var lossyScale = transform.lossyScale;
 
                 pp.x *= lossyScale.x;
                 pp.y *= lossyScale.y;
@@ -138,7 +137,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 maxY = Mathf.Max(pp.y, maxY);
             }
 
-            MBounds = new Rect(new Vector2(minX,minY), new Vector2(maxX - minX, maxY - minY));
+            m_Bounds = new Rect(new Vector2(minX,minY), new Vector2(maxX - minX, maxY - minY));
         }
 
         private void OnDrawGizmosSelected()
@@ -159,7 +158,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             }
 
-            Gizmos.DrawWireCube(MBounds.center + (Vector2)transform.position,MBounds.size);
+            Gizmos.DrawWireCube(m_Bounds.center + (Vector2)transform.position,m_Bounds.size);
         }
 
         public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material)
@@ -167,7 +166,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (!castsShadows || material == null || !IsShadowedLayer(layerToRender)) return;
             cmdBuffer.SetGlobalFloat(k_ShadowHeightID, shadowHeight);
             cmdBuffer.SetGlobalVector(k_ShadowCenterID, shadowPosition);
-            cmdBuffer.SetGlobalFloat(k_FalloffRate, falloffRate);
             cmdBuffer.DrawMesh(mesh, transform.localToWorldMatrix, material);
         }
 

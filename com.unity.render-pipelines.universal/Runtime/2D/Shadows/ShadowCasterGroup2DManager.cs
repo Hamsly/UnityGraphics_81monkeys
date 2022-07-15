@@ -14,11 +14,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private static List<ShadowCaster2D> dynamicShadows = new List<ShadowCaster2D>();
         private static List<ShadowCaster2D> staticShadows = new List<ShadowCaster2D>();
 
-        private static bool hasDoneInit = false;
+        //private static bool hasDoneInit = false;
 
         public ShadowCasterGroup2DManager()
         {
-            Shadow2DWorldManager.OnInit += OnShadowWorldInit;
+            ShadowRealm2D.OnInit += OnShadowWorldInit;
 
             SceneManager.sceneUnloaded += OnSceneUnloaded;
         }
@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             foreach (var caster in staticShadows)
             {
-                Shadow2DWorldManager.Instance.RegisterStaticShadow(caster);
+                ShadowRealm2D.Instance.RegisterStaticShadow(caster);
             }
         }
 
@@ -91,9 +91,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 staticShadows.Add(shadowCaster);
             }
 
-            if (Shadow2DWorldManager.Instance is { HasDoneInit: true })
+            if (ShadowRealm2D.Instance is { HasDoneInit: true })
             {
-                Shadow2DWorldManager.Instance.RegisterStaticShadow(shadowCaster);
+                ShadowRealm2D.Instance.RegisterStaticShadow(shadowCaster);
             }
         }
 
@@ -126,9 +126,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             ShadowCastersCulled.Clear();
 
-            if (Shadow2DWorldManager.Instance != null)
+            if (ShadowRealm2D.Instance != null)
             {
-                Shadow2DWorldManager.Instance.GetShadowCasters(ref ShadowCastersCulled,cameraBounds);
+                ShadowRealm2D.Instance.GetShadowCasters(ref ShadowCastersCulled,cameraBounds);
             }
         }
 

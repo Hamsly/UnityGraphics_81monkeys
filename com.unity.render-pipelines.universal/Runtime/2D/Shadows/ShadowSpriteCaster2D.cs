@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
             get { return m_Texture; }
         }
-        private void Awake()
+        private new void Awake()
         {
             materialType = Renderer2DData.ShadowMaterialTypes.SpriteShadow;
 
@@ -198,7 +198,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             mesh.triangles = triangles;
         }
 
-        protected void OnDisable()
+        protected new void OnDisable()
         {
             base.OnDisable();
             ShadowCasterGroup2DManager.RemoveFromShadowCasterGroup(this, m_ShadowCasterGroup);

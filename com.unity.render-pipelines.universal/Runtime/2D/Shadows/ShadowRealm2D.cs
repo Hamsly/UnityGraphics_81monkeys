@@ -9,18 +9,20 @@ using UnityEngine.SceneManagement;
 namespace UnityEngine.Experimental.Rendering.Universal
 {
     [ExecuteInEditMode]
-    public class Shadow2DWorldManager : MonoBehaviour
+    public class ShadowRealm2D : MonoBehaviour
     {
-        public static Shadow2DWorldManager Instance;
+        public static ShadowRealm2D Instance;
+
+        [SerializeField] private Camera shadowCamera;
 
         public int IterationsPerFrame = 100;
         [Min(1)]public int UnitSize = 16;
 
         public Rect WorldRect;
 
-        private QuadTree<ShadowCaster2D> shadowTreeA;
-        private QuadTree<ShadowCaster2D> shadowTreeB;
-        private QuadTree<ShadowCaster2D> staticShadowTree;
+        [SerializeField] private QuadTree<ShadowCaster2D> shadowTreeA;
+        [SerializeField] private QuadTree<ShadowCaster2D> shadowTreeB;
+        [SerializeField] private QuadTree<ShadowCaster2D> staticShadowTree;
 
         public static event Action OnInit;
 
@@ -35,16 +37,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public bool HasDoneInit { get; private set; } = false;
 
+        public Camera ShadowCamera => shadowCamera;
+
         private void OnEnable()
         {
+            Instance = this;
+
             if (WorldRect.width != 0 && WorldRect.height != 0)
             {
                 InitShadow2DWorld(WorldRect);
             }
-
         }
 
-        public Shadow2DWorldManager()
+        public ShadowRealm2D()
         {
             HasDoneInit = false;
 
@@ -122,13 +127,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             if (DebugDynamicShadows)
             {
-                QuadTree<ShadowCaster2D> workingTree = currentShadowTree ? shadowTreeA : shadowTreeB;
+                QuadTree<ShadowCaster2D> workingTree = !currentShadowTree ? shadowTreeA : shadowTreeB;
                 workingTree.DrawGizmo(DebugOffset);
             }
 
             if (DebugDynamicBuildingShadows)
             {
-                QuadTree<ShadowCaster2D> workingTree = !currentShadowTree ? shadowTreeA : shadowTreeB;
+                QuadTree<ShadowCaster2D> workingTree = currentShadowTree ? shadowTreeA : shadowTreeB;
                 workingTree.DrawGizmo(DebugOffset);
             }
 

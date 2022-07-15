@@ -5,6 +5,10 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 
 namespace UnityEngine.Experimental.Rendering.Universal
 {
@@ -28,7 +32,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         private bool forceUpdate = false;
 
-        protected Rect MBounds;
+        protected Rect m_Bounds;
         public Rect Bounds
         {
             get
@@ -36,6 +40,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 var p = transform.position;
                 //return new Rect(MBounds.x + p.x,MBounds.y + p.y,MBounds.width,MBounds.height);
                 return new Rect(p.x, p.y,0,0);
+            }
+
+            set
+            {
+                m_Bounds = value;
             }
         }
 
@@ -47,7 +56,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         internal static readonly int k_ShadowHeightID = Shader.PropertyToID("_ShadowHeight");
         internal static readonly int k_ShadowCenterID = Shader.PropertyToID("_ShadowCenter");
-        internal static readonly int k_FalloffRate = Shader.PropertyToID("_FalloffRate");
 
         /// <summary>
         /// If true, the shadow casting shape is included as part of the shadow. If false, the shadow casting shape is excluded from the shadow.
@@ -157,6 +165,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             isStatic = gameObject.isStatic;
         }
+
         protected void Start()
         {
             if (!isStatic)
@@ -189,6 +198,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public void Update()
         {
+
+
             if (!forceUpdate)
             {
                 if (isStatic) return;

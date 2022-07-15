@@ -37,13 +37,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public void UnregisterShadowCaster2D(ShadowCaster2D shadowCaster2D)
         {
-            if (m_ShadowCasters != null)
-            {
-                m_ShadowCasters.Remove(shadowCaster2D);
+            if (m_ShadowCasters == null) return;
 
-                shadowCaster2D.m_ShadowGroup = nextGroupID++;
-                shadowCaster2D.ForceUpdate();
-            }
+            m_ShadowCasters.Remove(shadowCaster2D);
+
+            shadowCaster2D.m_ShadowGroup = nextGroupID++;
+            shadowCaster2D.ForceUpdate();
         }
 
         private void AssertLists()

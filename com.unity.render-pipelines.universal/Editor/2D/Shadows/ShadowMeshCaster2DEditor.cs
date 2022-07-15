@@ -90,8 +90,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
             public static GUIContent castsShadows = EditorGUIUtility.TrTextContent("Casts Shadows", "Specifies if this renderer will cast shadows");
             public static GUIContent height = EditorGUIUtility.TrTextContent("Shadow Height", "The simulated height of the shadow");
             public static GUIContent zPosition = EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
-            public static GUIContent falloffRate = EditorGUIUtility.TrTextContent("Shadow Falloff Min Distance", "The minimum shadow length before falloff begins");
-            public static GUIContent texture = EditorGUIUtility.TrTextContent("Shadow Texture", "The texture to apply to the shadow");
             public static GUIContent ShapePath = EditorGUIUtility.TrTextContent("Shadow Path", "The shape path of the Shadow");
             public static GUIContent sortingLayerPrefixLabel = EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
         }
@@ -187,8 +185,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
             EditorGUILayout.PropertyField(m_SelfShadows, Styles.selfShadows);
             EditorGUILayout.PropertyField(m_Height, Styles.height);
             EditorGUILayout.PropertyField(m_ZPosition, Styles.zPosition);
-            EditorGUILayout.PropertyField(m_FalloffRate, Styles.falloffRate);
-            //EditorGUILayout.PropertyField(m_ShadowTexture, Styles.texture);
 
             m_SortingLayerDropDown.OnTargetSortingLayers(serializedObject, targets, Styles.sortingLayerPrefixLabel, null);
 
