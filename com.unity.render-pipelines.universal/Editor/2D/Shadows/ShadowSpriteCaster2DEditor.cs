@@ -47,9 +47,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
             public static GUIContent silhouettedRenderer =
                 EditorGUIUtility.TrTextContent("Silhouetted Renderers", "The Renderers to use for the Silhouette");
 
-            public static GUIContent selfShadows =
-                EditorGUIUtility.TrTextContent("Self Shadows", "When enabled, the Renderer casts shadows on itself.");
-
             public static GUIContent spriteCasterType =
                 EditorGUIUtility.TrTextContent("Sprite Caster Type", "General rules for generating the shadow mesh");
 
@@ -77,7 +74,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
         SerializedProperty m_Direction;
         SerializedProperty m_SilhouettedRenderers;
         SerializedProperty m_CastsShadows;
-        SerializedProperty m_SelfShadows;
         SerializedProperty m_ReceivesShadows;
         SerializedProperty m_ZPosition;
         SerializedProperty m_Texture;
@@ -96,7 +92,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
             m_Size = serializedObject.FindProperty("m_Size");
             m_Direction = serializedObject.FindProperty("m_Direction");
             m_SilhouettedRenderers = serializedObject.FindProperty("m_SilhouettedRenderers");
-            m_SelfShadows = serializedObject.FindProperty("m_SelfShadows");
             m_CastsShadows = serializedObject.FindProperty("m_CastsShadows");
             m_ZPosition = serializedObject.FindProperty("m_ZPosition");
             m_Texture = serializedObject.FindProperty("m_Texture");
@@ -148,7 +143,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
 
             EditorGUILayout.PropertyField(m_CastsShadows, Styles.castsShadows);
-            EditorGUILayout.PropertyField(m_SelfShadows, Styles.selfShadows);
             EditorGUILayout.PropertyField(m_ZPosition, Styles.zPosition);
 
             m_SortingLayerDropDown.OnTargetSortingLayers(serializedObject, targets, Styles.sortingLayerPrefixLabel, null);
