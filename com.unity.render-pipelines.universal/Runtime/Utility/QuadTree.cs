@@ -10,7 +10,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public Rect Bounds { get; }
     }
 
-    [Serializable]
     public class QuadTree<T> where T : IQuadTreeNode
     {
         private Rect bounds;

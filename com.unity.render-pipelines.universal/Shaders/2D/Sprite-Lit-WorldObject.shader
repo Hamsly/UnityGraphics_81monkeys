@@ -100,7 +100,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 
 
-                float2 lp = ComputeScreenPos(TransformObjectToHClip(v.positionOS + float4(1,1,0,0))).xy;
+                float2 lp = ComputeScreenPos(TransformObjectToHClip(v.positionOS + float3(1,1,0))).xy;
 
                 o.lightingUV = float2(ComputeScreenPos(o.positionCS).xy);
 
@@ -114,8 +114,8 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
             float4 CombinedShapeLightFragment(Varyings i) : SV_Target
             {
-                float4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
-                half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
+                const float4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+                const half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
 
                 float4 hh = SAMPLE_TEXTURE2D(_OffsetMap,sampler_OffsetMap, i.uv);
 
@@ -126,7 +126,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 xx += (g & 0xF) * 256 * sign(xx);
                 yy += (g >> 4 & 0xF) * 256 * sign(xx);
 
-                float3 offset = float3(xx * (i.scale.x),-yy * (i.scale.y),0);
+                const float2 offset = float2(xx * (i.scale.x),-yy * (i.scale.y));
                 return CombinedShapeLightShared(main, mask, i.lightingUV + offset);
             }
             ENDHLSL

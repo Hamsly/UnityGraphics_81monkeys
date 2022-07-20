@@ -57,18 +57,12 @@ Shader "Hidden/ShadowSpriteBasicGroup2D"
             uniform float3 _ShadowCenter;
             uniform sampler2D _ShadowTexture;
             float4 _ShadowTexture_ST;
-            float4 _ShadowBasePos;
-
-
 
 
             Varyings vert (Attributes v)
             {
 
                 float3 vertexWS = TransformObjectToWorld(v.vertex);  // This should be in world space
-
-                float2 v1 = _ShadowBasePos.xy;
-                float2 v2 = _ShadowBasePos.zw;
 
                 vertexWS.z = _ShadowCenter.z + v.vertex.z;
 
@@ -83,7 +77,7 @@ Shader "Hidden/ShadowSpriteBasicGroup2D"
                 // Start of code to see if this point should be extruded
                 const float3 lightDirection = normalize(lightDir);
 
-                float3 offset =  (_BaseOffset * -lightDirection);
+                const float3 offset =  (_BaseOffset * -lightDirection);
 
                 const float3 position = vertexWS + offset;
 
@@ -94,6 +88,7 @@ Shader "Hidden/ShadowSpriteBasicGroup2D"
                 o.color.r = shadowHeightTest;  // v.color;
                 o.color.g = 0.5;
                 o.color.b = 0;
+                o.color.a = 0;
                 o.uv_tex = TRANSFORM_TEX(v.uv_tex,_ShadowTexture);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 

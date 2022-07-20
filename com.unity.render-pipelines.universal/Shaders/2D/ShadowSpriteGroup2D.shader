@@ -144,13 +144,13 @@ Shader "Hidden/ShadowSpriteGroup2D"
                 const float shadowTop = _ShadowInfo.y + input[0].vertex.z;
                 float lightZDiff =  clamp(InvLerp(input[0].vertex.z,shadowTop,_LightPos.z),0,1);
 
-                Varyings v0 = newShadowVertex(aa,(input[0].vertex + offset),input[0].uv);
-                Varyings v1 = newShadowVertex(aa,(input[0].vertex + offset) + float3(0,0,_ShadowInfo.y),input[0].uv);
-                Varyings v2 = newShadowVertex(aa,(input[0].vertex - offset) + float3(0,0,_ShadowInfo.y),input[0].uv);
-                Varyings v3 = newShadowVertex(aa,(input[0].vertex - offset),input[0].uv);
+                Varyings v0 = newShadowVertex(aa,(input[0].vertex.xyz + offset),input[0].uv);
+                Varyings v1 = newShadowVertex(aa,(input[0].vertex.xyz + offset) + float3(0,0,_ShadowInfo.y),input[0].uv);
+                Varyings v2 = newShadowVertex(aa,(input[0].vertex.xyz - offset) + float3(0,0,_ShadowInfo.y),input[0].uv);
+                Varyings v3 = newShadowVertex(aa,(input[0].vertex.xyz - offset),input[0].uv);
 
 
-                const float2 intersect = lineIntersection(v0.vertex,v2.vertex,v1.vertex,v3.vertex);
+                const float2 intersect = lineIntersection(v0.vertex.xy,v2.vertex.xy,v1.vertex.xy,v3.vertex.xy);
 
                 const float d0 = distance(v0.vertex.xy,intersect);
                 const float d1 = distance(v1.vertex.xy,intersect);
