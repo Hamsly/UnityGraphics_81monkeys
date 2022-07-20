@@ -86,7 +86,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
         {
             public static GUIContent shadowMode = EditorGUIUtility.TrTextContent("Use Renderer Silhouette", "When this and Self Shadows are enabled, the Renderer's silhouette is considered part of the shadow. When this is enabled and Self Shadows disabled, the Renderer's silhouette is excluded from the shadow.");
             public static GUIContent silhouettedRenderer = EditorGUIUtility.TrTextContent("Silhouetted Renderers", "The Renderers to use for the Silhouette");
-            public static GUIContent selfShadows = EditorGUIUtility.TrTextContent("Self Shadows", "When enabled, the Renderer casts shadows on itself.");
             public static GUIContent castsShadows = EditorGUIUtility.TrTextContent("Casts Shadows", "Specifies if this renderer will cast shadows");
             public static GUIContent height = EditorGUIUtility.TrTextContent("Shadow Height", "The simulated height of the shadow");
             public static GUIContent zPosition = EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
@@ -113,7 +112,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
         {
             m_UseRendererSilhouette = serializedObject.FindProperty("m_UseRendererSilhouette");
             m_SilhouettedRenderers = serializedObject.FindProperty("m_SilhouettedRenderers");
-            m_SelfShadows = serializedObject.FindProperty("m_SelfShadows");
             m_CastsShadows = serializedObject.FindProperty("m_CastsShadows");
             m_Height = serializedObject.FindProperty("m_Height");
             m_ZPosition = serializedObject.FindProperty("m_ZPosition");
@@ -182,7 +180,6 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
 
             EditorGUILayout.PropertyField(m_CastsShadows, Styles.castsShadows);
-            EditorGUILayout.PropertyField(m_SelfShadows, Styles.selfShadows);
             EditorGUILayout.PropertyField(m_Height, Styles.height);
             EditorGUILayout.PropertyField(m_ZPosition, Styles.zPosition);
 

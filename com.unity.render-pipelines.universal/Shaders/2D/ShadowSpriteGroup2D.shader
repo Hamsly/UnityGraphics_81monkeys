@@ -13,7 +13,7 @@ Shader "Hidden/ShadowSpriteGroup2D"
         Tags { "RenderType"="Opaque" }
 
         Cull Off
-        BlendOp Max
+        BlendOp Add
         Blend One One
         ZWrite Off
 
@@ -22,7 +22,7 @@ Shader "Hidden/ShadowSpriteGroup2D"
             Stencil
             {
                 Ref [_ShadowStencilGroup]
-                Comp Always
+                Comp NotEqual
                 Pass Replace
                 Fail Keep
             }
@@ -183,6 +183,7 @@ Shader "Hidden/ShadowSpriteGroup2D"
                 float4 main = tex2D(_MainTex, i.uv);
                 float4 col = i.color;
                 const float aa = tex2D(_ShadowTexture,i.uv_tex.xy / i.uv_tex.z).a;
+                clip(aa - 0.1);
                 col.r = aa;
                 col.g = main.a * col.g * aa;
 

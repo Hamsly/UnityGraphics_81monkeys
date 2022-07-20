@@ -11,7 +11,7 @@ Shader "Hidden/ShadowMeshGroup2D"
         Tags { "RenderType"="Opaque" }
 
         Cull Off
-        BlendOp Max
+        BlendOp Add
         Blend One One
         ZWrite Off
 
@@ -20,7 +20,7 @@ Shader "Hidden/ShadowMeshGroup2D"
             Stencil
             {
                 Ref [_ShadowStencilGroup]
-                Comp Always
+                Comp NotEqual
                 Pass Replace
                 Fail Keep
             }
@@ -93,9 +93,10 @@ Shader "Hidden/ShadowMeshGroup2D"
                 o.vertex = TransformWorldToHClip(position);
 
                 // RGB - R is shadow value (to support soft shadows), G is Self Shadow Mask, B is No Shadow Mask
-                o.color = shadowHeightTest;//(1 - (length(position - vertexWS.xy) / max(_ProjectionOffset, _FalloffRate))) * shadowHeightTest;  // v.color;
+                o.color.r = shadowHeightTest;//(1 - (length(position - vertexWS.xy) / max(_ProjectionOffset, _FalloffRate))) * shadowHeightTest;  // v.color;
                 o.color.g = 0.5;
                 o.color.b = 0;
+                o.color.a = 1;
 
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 
@@ -112,6 +113,7 @@ Shader "Hidden/ShadowMeshGroup2D"
             }
             ENDHLSL
         }
+        /*
         Pass
         {
             Stencil
@@ -168,5 +170,6 @@ Shader "Hidden/ShadowMeshGroup2D"
             }
             ENDHLSL
         }
+        */
     }
 }

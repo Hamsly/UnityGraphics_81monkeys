@@ -20,7 +20,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] protected float m_ZPosition = 0f;
         [SerializeField] protected int m_InstanceId;
         [SerializeField] bool m_CastsShadows = true;
-        [SerializeField] bool m_SelfShadows = false;
         [SerializeField] int[] m_ApplyToSortingLayers = null;
         [SerializeField] Renderer2DData.ShadowMaterialTypes m_materialType = Renderer2DData.ShadowMaterialTypes.MeshShadows;
 
@@ -56,15 +55,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         internal static readonly int k_ShadowHeightID = Shader.PropertyToID("_ShadowHeight");
         internal static readonly int k_ShadowCenterID = Shader.PropertyToID("_ShadowCenter");
-
-        /// <summary>
-        /// If true, the shadow casting shape is included as part of the shadow. If false, the shadow casting shape is excluded from the shadow.
-        /// </summary>
-        public bool selfShadows
-        {
-            set { m_SelfShadows = value; }
-            get { return m_SelfShadows; }
-        }
 
         /// <summary>
         /// If selfShadows is true, useRendererSilhoutte specifies that the renderer's sihouette should be considered part of the shadow. If selfShadows is false, useRendererSilhoutte specifies that the renderer's sihouette should be excluded from the shadow
