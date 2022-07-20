@@ -30,10 +30,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         int m_PreviousPathHash = 0;
 
-        public float shadowHeight
+        public float ShadowHeight
         {
             set => m_Height = value;
             get => m_Height;
+        }
+
+        public float ZPosition
+        {
+            set => m_ZPosition = value;
+            get => m_ZPosition;
         }
 
         private new void Awake()
@@ -154,7 +160,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 pp.y += m_ZPosition;
 
                 var point = pp + transformRef.position;
-                Gizmos.DrawLine(point, point + new Vector3(0, shadowHeight, 0));
+                Gizmos.DrawLine(point, point + new Vector3(0, ShadowHeight, 0));
 
             }
 
@@ -164,7 +170,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material)
         {
             if (!castsShadows || material == null || !IsShadowedLayer(layerToRender)) return;
-            cmdBuffer.SetGlobalFloat(k_ShadowHeightID, shadowHeight);
+            cmdBuffer.SetGlobalFloat(k_ShadowHeightID, ShadowHeight);
             cmdBuffer.SetGlobalVector(k_ShadowCenterID, shadowPosition);
             cmdBuffer.DrawMesh(mesh, transform.localToWorldMatrix, material);
         }

@@ -174,6 +174,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         private static void RenderLightSet(IRenderPass2D pass, RenderingData renderingData, int blendStyleIndex, CommandBuffer cmd, int layerToRender, RenderTargetIdentifier renderTexture, List<Light2D> lights)
         {
+            cmd.BeginSample("RenderLightSet");
+
             var maxShadowTextureCount = ShadowRendering.maxTextureCount;
             var requiresRTInit = true;
 
@@ -188,6 +190,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var lightIndex = 0;
             while (lightIndex < lights.Count)
             {
+                var indexName = $"Light Index {lightIndex}";
+                cmd.BeginSample(indexName);
+
                 var remainingLights = (uint)lights.Count - lightIndex;
                 var batchedLights = 0;
 
@@ -198,8 +203,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     var light = lights[lightIndex + batchedLights];
                     if (light.shadowsEnabled && light.shadowIntensity > 0)
                     {
+                        var sampleName = $"Shadows For {light.gameObject.name} Batch {batchedLights}";
+                        cmd.BeginSample(sampleName);
                         ShadowRendering.CreateShadowRenderTexture(pass, renderingData, cmd, shadowLightCount);
                         ShadowRendering.PrerenderShadows(pass, renderingData, cmd, layerToRender, light, shadowLightCount, light.shadowIntensity);
+                        cmd.EndSample(sampleName);
                         shadowLightCount++;
                     }
                     batchedLights++;
@@ -264,7 +272,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     ShadowRendering.ReleaseShadowRenderTexture(cmd, releaseIndex);
 
                 lightIndex += batchedLights;
+
+                cmd.EndSample(indexName);
             }
+
+            cmd.EndSample("RenderLightSet");
         }
 
         //Old unused Light drawing
@@ -504,7 +516,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 if ((layerBatch.lightStats.blendStylesUsed & (uint)(1 << i)) == 0)
                     continue;
 
-                var sampleName = blendStyles[i].name;
+                var sampleName = blendStyles[i].name + "_" + i + "_" + renderingData.cameraData.camera.gameObject.name;
                 cmd.BeginSample(sampleName);
 
                 if (!Light2DManager.GetGlobalColor(layerToRender, i, out var clearColor))

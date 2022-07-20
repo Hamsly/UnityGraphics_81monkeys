@@ -19,20 +19,25 @@ namespace UnityEngine.Experimental.Rendering.Universal
         enum SpriteCasterType
         {
             Standing,
-            flat,
+            Flat,
         }
 
-        [SerializeField] float m_Direction = 270f;
+        [SerializeField] float m_Direction = 0f;
         [SerializeField] Vector2 m_Size = Vector2.one;
         [SerializeField] Mesh m_Mesh;
         [SerializeField] Texture2D m_Texture;
         [SerializeField] SpriteCasterType m_SpriteCasterType;
         [SerializeField] private bool m_ReorientPerLight;
+        [SerializeField,Range(0f,1f)] private float m_basePoint;
 
         internal static readonly int k_ShadowTexture = Shader.PropertyToID("_ShadowTexture");
-        internal Mesh mesh => m_Mesh;
+        internal static readonly int k_ShadowBasePos = Shader.PropertyToID("_ShadowBasePos");
+        internal static readonly int k_ShadowInfo = Shader.PropertyToID("_ShadowInfo");
 
         private VertexAttributeDescriptor[] vertexLayout;
+
+        private Vector2 basePos1;
+        private Vector2 basePos2;
 
         private float directionPrev = 0;
         private Vector2 sizePrev = Vector2.zero;
@@ -52,20 +57,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
         }
         private new void Awake()
         {
-            materialType = Renderer2DData.ShadowMaterialTypes.SpriteShadow;
+            m_Mesh = null;
+            materialType = m_SpriteCasterType == SpriteCasterType.Standing ?
+                Renderer2DData.ShadowMaterialTypes.SpriteShadow :
+                Renderer2DData.ShadowMaterialTypes.SpriteShadowSimple;
 
             base.Awake();
-
-            Renderer renderer = GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                if (m_SilhouettedRenderers.Length < 1)
-                {
-                    m_SilhouettedRenderers = new Renderer[1];
-                    m_SilhouettedRenderers[0] = renderer;
-                }
-            }
-
         }
 
         private void GenerateMesh(Vector2 size,float direction, ref Mesh mesh)
@@ -73,70 +70,18 @@ namespace UnityEngine.Experimental.Rendering.Universal
             switch (m_SpriteCasterType)
             {
                 case SpriteCasterType.Standing:
-                    GenerateStandingSpriteMesh(size, direction, ref mesh);
+                    GenerateStandingSpriteMesh(ref mesh);
                     break;
 
-                case SpriteCasterType.flat:
+                case SpriteCasterType.Flat:
                     GenerateFlatSpriteMesh(size, direction, ref mesh);
                     break;
             }
         }
 
-        private void GenerateStandingSpriteMesh(Vector2 size,float direction, ref Mesh mesh)
+        private void GenerateStandingSpriteMesh( ref Mesh mesh)
         {
-            var numberOfVerts = 5;
-            Vector3[] vertices = new Vector3[numberOfVerts];
-            Vector2[] UVs = new Vector2[numberOfVerts];
-            int[] triangles = new int[4 * 3];
-
-
-            //direction -= (Mathf.PI / 2);
-            Vector3 directionVector = new Vector3(Mathf.Cos(direction), Mathf.Sin(direction),0);
-
-            float ww = size.x * 0.5f;
-            vertices[0] = directionVector * ww;
-            vertices[1] = (directionVector * ww) + (Vector3.forward * size.y);
-            vertices[2] = directionVector * -ww;
-            vertices[3] = (directionVector * -ww) + (Vector3.forward * size.y);
-            vertices[4] = Vector3.forward * (size.y * 0.5f);
-
-            UVs[0] = new Vector2(0, 0);
-            UVs[1] = new Vector2(0, 1);
-            UVs[2] = new Vector2(1, 0);
-            UVs[3] = new Vector2(1, 1);
-            UVs[4] = new Vector2(0.5f, 0.5f);
-
-            float dd = UnityEngine.Mathf.Sqrt((size.x * size.x) + (size.y * size.y));
-
-            int i = 0;
-            triangles[i++] = 0;
-            triangles[i++] = 1;
-            triangles[i++] = 4;
-
-            triangles[i++] = 1;
-            triangles[i++] = 3;
-            triangles[i++] = 4;
-
-            triangles[i++] = 3;
-            triangles[i++] = 2;
-            triangles[i++] = 4;
-
-            triangles[i++] = 2;
-            triangles[i++] = 0;
-            triangles[i++] = 4;
-
-            if (mesh == null)
-            {
-                mesh = new Mesh();
-            }
-            else
-            {
-                mesh.Clear();
-            }
-
-            mesh.vertices = vertices;
-            mesh.uv2 = UVs;
-            mesh.triangles = triangles;
+            mesh = null;
         }
 
         private void GenerateFlatSpriteMesh(Vector2 size,float direction, ref Mesh mesh)
@@ -184,14 +129,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
             triangles[i++] = 0;
             triangles[i++] = 4;
 
-            if (mesh == null)
-            {
-                mesh = new Mesh();
-            }
-            else
-            {
-                mesh.Clear();
-            }
+            mesh.Clear();
+
+            mesh.name = gameObject.name;
 
             mesh.vertices = vertices;
             mesh.uv2 = UVs;
@@ -204,7 +144,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             ShadowCasterGroup2DManager.RemoveFromShadowCasterGroup(this, m_ShadowCasterGroup);
         }
 
-        new public void Update()
+        public new void Update()
         {
             bool rebuildMesh = LightUtility.CheckForChange(m_Direction, ref directionPrev);
             if (m_Size != sizePrev)
@@ -217,6 +157,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 spriteCasterTypePrev = m_SpriteCasterType;
                 rebuildMesh = true;
+
+                materialType = m_SpriteCasterType == SpriteCasterType.Standing ?
+                    Renderer2DData.ShadowMaterialTypes.SpriteShadow :
+                    Renderer2DData.ShadowMaterialTypes.SpriteShadowSimple;
             }
 
             if (m_ReorientPerLight != reorientPerLightPrev)
@@ -227,12 +171,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             if (rebuildMesh)
             {
+                if (m_Mesh == null)
+                {
+                    m_Mesh = new Mesh();
+                }
+
                 GenerateMesh(m_Size, m_Direction * Mathf.Deg2Rad, ref m_Mesh);
             }
 
             base.Update();
         }
-
 
         public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material)
         {
@@ -240,19 +188,36 @@ namespace UnityEngine.Experimental.Rendering.Universal
             cmdBuffer.SetGlobalVector(k_ShadowCenterID, shadowPosition);
             cmdBuffer.SetGlobalTexture(k_ShadowTexture, texture);
 
-            Mesh meshToRender = m_Mesh;
+            var position = transform.position;
+            cmdBuffer.SetGlobalVector(k_ShadowBasePos, new Vector4(position.x,position.y,m_ZPosition,0));
+
+            Vector2 lightPos = (Vector2)light.transform.position - new Vector2(shadowPosition.x, shadowPosition.y);
+            float dir;
+
             if (m_ReorientPerLight)
             {
-                Vector2 LightPos = (Vector2)light.transform.position - new Vector2(shadowPosition.x, shadowPosition.y);
-                float dir = ((m_Direction + 90) * Mathf.Deg2Rad) + Mathf.Atan2(LightPos.y , LightPos.x);
-
-                m_Mesh = null;
-                GenerateMesh(m_Size, dir , ref m_Mesh);
-
-                meshToRender = m_Mesh;
+                dir = ((m_Direction + 90) * Mathf.Deg2Rad) + Mathf.Atan2(lightPos.y, lightPos.x);
+            }
+            else
+            {
+                dir = m_Direction * Mathf.Deg2Rad;
             }
 
-            cmdBuffer.DrawMesh(meshToRender, transform.localToWorldMatrix, material);
+            cmdBuffer.SetGlobalVector(k_ShadowInfo,new Vector4(m_Size.x,m_Size.y * (1f - m_basePoint),dir,m_basePoint));
+
+            if (m_SpriteCasterType == SpriteCasterType.Standing)
+            {
+                cmdBuffer.DrawProcedural(transform.localToWorldMatrix,material,-1,MeshTopology.Points,1);
+            }
+            else
+            {
+                if (m_ReorientPerLight)
+                {
+                    GenerateMesh(m_Size, dir, ref m_Mesh);
+                }
+
+                cmdBuffer.DrawMesh(m_Mesh, transform.localToWorldMatrix, material,0,-1);
+            }
         }
 
         private void OnDrawGizmosSelected()
@@ -270,8 +235,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     Gizmos.color = Color.white;
                     Gizmos.DrawLine(p1, p2);
                     break;
-
-
             }
         }
 

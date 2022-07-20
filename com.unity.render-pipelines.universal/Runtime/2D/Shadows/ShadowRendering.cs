@@ -19,6 +19,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         private static RenderTargetHandle m_WorkingTexture;
         private static RenderTargetHandle[] m_RenderTargets = null;
+
         public static  uint maxTextureCount { get; private set; }
 
         public static void InitializeBudget(uint maxTextureCount)
@@ -110,15 +111,34 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 rendererData.removeSelfShadowMaterials[shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, shadowMaterialIndex);
                 //Debug.Log("Built Remove Self material " + shadowMaterialIndex);
             }
-
             return rendererData.removeSelfShadowMaterials[shadowMaterialIndex];
         }
 
         public static void RenderShadows(IRenderPass2D pass, RenderingData renderingData, CommandBuffer cmdBuffer, int layerToRender, Light2D light, float shadowIntensity, RenderTargetIdentifier renderTexture)
         {
+            RenderTargetIdentifier workingTexture = new RenderTargetIdentifier();
+
+
+             // Blur Set up
+             /*
+            workingTexture = m_WorkingTexture.id;
+            CreateShadowRenderTexture(pass, m_WorkingTexture, renderingData, cmdBuffer);
+
+
+            cmdBuffer.SetRenderTarget(
+               workingTexture,
+               RenderBufferLoadAction.DontCare,
+               RenderBufferStoreAction.Store,
+               RenderBufferLoadAction.DontCare,
+               RenderBufferStoreAction.DontCare);
+            cmdBuffer.ClearRenderTarget(true, true, Color.black); // clear stencil
+            var blurMaterial = pass.rendererData.GetPostRenderShadowMaterial();
+            */
+
 
             cmdBuffer.SetRenderTarget(renderTexture, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmdBuffer.ClearRenderTarget(true, true, Color.black);  // clear stencil
+
 
             var lightPosition = light.transform.position;
             cmdBuffer.SetGlobalVector(k_LightPosID, lightPosition);
@@ -179,6 +199,18 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     silhouette.ExcludeSilhouettes(cmdBuffer,layerToRender,mat);
                 }
             }
+
+            /*
+             //Blur Final Render
+            var width = (int)(renderingData.cameraData.cameraTargetDescriptor.width);
+            var height = (int)(renderingData.cameraData.cameraTargetDescriptor.height);
+
+            cmdBuffer.SetGlobalVector(k_MainTex_TexelSize, new Vector4(1f / width,  1f / height, width, height));
+            cmdBuffer.SetGlobalFloat(k_BlurStrength, 2);
+            cmdBuffer.Blit(workingTexture, renderTexture, blurMaterial, -1);
+            cmdBuffer.ReleaseTemporaryRT(m_WorkingTexture.id);
+            */
+
         }
     }
 }

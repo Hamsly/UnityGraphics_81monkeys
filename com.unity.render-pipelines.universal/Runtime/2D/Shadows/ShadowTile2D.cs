@@ -21,6 +21,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] int m_ShapePathHash = 0;
         [SerializeField] Mesh m_Mesh;
 
+        [SerializeField] private int layerID = 0;
+
+        public int LayerID => layerID;
 
         internal Mesh mesh => m_Mesh;
         internal Vector3[] shapePath => m_ShapePath;
@@ -44,11 +47,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         protected  void OnEnable()
         {
-            if (m_Mesh == null )
-            {
-                m_Mesh = new Mesh();
-                ShadowUtility.GenerateShadowMesh(m_Mesh, m_ShapePath);
-            }
+            if (m_Mesh != null) return;
+
+            m_Mesh = new Mesh();
+            ShadowUtility.GenerateShadowMesh(m_Mesh, m_ShapePath);
         }
 
         protected void Update()

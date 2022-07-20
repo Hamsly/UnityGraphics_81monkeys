@@ -67,6 +67,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             public static GUIContent sortingLayerPrefixLabel =
                 EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
+
+            public static GUIContent basePoint =
+                EditorGUIUtility.TrTextContent("Base Point", "The normalized y position on the texture we begin drawing from.");
         }
 
         SerializedProperty m_UseRendererSilhouette;
@@ -77,11 +80,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
         SerializedProperty m_SelfShadows;
         SerializedProperty m_ReceivesShadows;
         SerializedProperty m_ZPosition;
-        SerializedProperty m_ShapePath;
-        SerializedProperty m_FalloffRate;
         SerializedProperty m_Texture;
         SerializedProperty m_SpriteCasterType;
         SerializedProperty m_ReorientPerLight;
+        SerializedProperty m_basePoint;
+        SerializedProperty m_Mesh;
 
 
         SortingLayerDropDown m_SortingLayerDropDown;
@@ -96,11 +99,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
             m_SelfShadows = serializedObject.FindProperty("m_SelfShadows");
             m_CastsShadows = serializedObject.FindProperty("m_CastsShadows");
             m_ZPosition = serializedObject.FindProperty("m_ZPosition");
-            m_ShapePath = serializedObject.FindProperty("m_ShapePath");
-            m_FalloffRate = serializedObject.FindProperty("m_FalloffRate");
             m_Texture = serializedObject.FindProperty("m_Texture");
             m_SpriteCasterType = serializedObject.FindProperty("m_SpriteCasterType");
             m_ReorientPerLight = serializedObject.FindProperty("m_ReorientPerLight");
+            m_basePoint = serializedObject.FindProperty("m_basePoint");
+            m_Mesh = serializedObject.FindProperty("m_Mesh");
 
             m_SortingLayerDropDown = new SortingLayerDropDown();
             m_SortingLayerDropDown.OnEnable(serializedObject, "m_ApplyToSortingLayers");
@@ -131,7 +134,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
             ShadowSpriteCaster2D shadowSpriteCaster = serializedObject.targetObject as ShadowSpriteCaster2D;
             serializedObject.Update();
 
+            EditorGUILayout.PropertyField(m_Mesh);
             EditorGUILayout.PropertyField(m_Texture, Styles.shadowTexture);
+            EditorGUILayout.PropertyField(m_basePoint, Styles.basePoint);
             EditorGUILayout.PropertyField(m_SpriteCasterType, Styles.spriteCasterType);
             EditorGUILayout.PropertyField(m_ReorientPerLight, Styles.reorientPerLight);
             EditorGUILayout.PropertyField(m_Size, Styles.size);

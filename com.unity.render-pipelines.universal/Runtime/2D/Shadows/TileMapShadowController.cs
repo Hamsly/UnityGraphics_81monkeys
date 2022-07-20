@@ -17,10 +17,26 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private Tilemap tileMap;
         private TilemapRenderer tilemapRenderer;
 
-        [SerializeField] private List<GameObject> shadowObjects;
-        [SerializeField] private float shadowHeight = 1;
-        [SerializeField] private bool silhouetteTileRenderer  = true;
-        [SerializeField] private int unitSize = 4;
+        [SerializeField] private ShadowTileLayer[] shadowTileLayers = {
+            new ShadowTileLayer
+            {
+                layerID = 0,
+                unitSize = 8,
+                shadowHeight = 0.5f,
+                shadowZPosition = 0,
+                silhouetteTileRenderer = true
+            }
+        };
+
+        [Serializable]
+        public struct ShadowTileLayer
+        {
+            public int layerID;
+            public int unitSize;
+            public float shadowHeight;
+            public float shadowZPosition;
+            public bool silhouetteTileRenderer;
+        }
 
         private bool ApplicationIsRunning => Application.isPlaying;
 
@@ -30,45 +46,27 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             tileMap = GetComponent<Tilemap>();
             tilemapRenderer = GetComponent<TilemapRenderer>();
-/*
-#if UNITY_EDITOR
-            Tilemap.tilemapTileChanged += OnTileChange;
-#endif
-*/
         }
 
         private new void OnDisable()
         {
             base.OnDisable();
-            /*
-#if UNITY_EDITOR
-            Tilemap.tilemapTileChanged -= OnTileChange;
-#endif
-*/
         }
-/*
-#if UNITY_EDITOR
-        private static void OnTileChange(Tilemap tileMap, Tilemap.SyncTile[] syncTiles)
-        {
-            if (tileMap.gameObject.TryGetComponent(out TileMapShadowController tileMapShadowController))
-            {
-                tileMapShadowController.UpdateShadowCasters();
-            }
-        }
-#endif
-*/
-
         private void Start()
         {
-            UpdateShadowCasters();
+            foreach (var layer in shadowTileLayers)
+            {
+                UpdateShadowCasters(layer);
+            }
         }
 
-        private void UpdateShadowCasters()
+        private void UpdateShadowCasters(ShadowTileLayer currentLayer)
         {
             if (!ApplicationIsRunning) return;
             if (tilemapRenderer == null) return;
 
-            Dictionary<Vector2Int, List<CombineInstance>> shadowPools = new Dictionary<Vector2Int,  List<CombineInstance>>();
+            Dictionary<Vector2Int, List<CombineInstance>> shadowPools =
+                new Dictionary<Vector2Int, List<CombineInstance>>();
 
             for (int i = 0; i < transform.childCount; i++)
             {
@@ -90,21 +88,23 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                 if (child.TryGetComponent(out ShadowTile2D shadowCaster))
                 {
+                    if (shadowCaster.LayerID != currentLayer.layerID) continue;
+
                     Vector2Int childPos = new Vector2Int(
-                        Mathf.RoundToInt(child.position.x / unitSize),
-                        Mathf.RoundToInt(child.position.y / unitSize));
+                        Mathf.RoundToInt(child.position.x / currentLayer.unitSize),
+                        Mathf.RoundToInt(child.position.y / currentLayer.unitSize));
 
                     var combineInstance = new CombineInstance();
                     combineInstance.mesh = shadowCaster.mesh;
                     var mat = child.localToWorldMatrix;
 
-                    mat.m03 -= childPos.x * unitSize;
-                    mat.m13 -= childPos.y * unitSize;
+                    mat.m03 -= childPos.x * currentLayer.unitSize;
+                    mat.m13 -= childPos.y * currentLayer.unitSize;
 
                     combineInstance.transform = mat;
 
                     if (!shadowPools.ContainsKey(childPos))
-                        shadowPools.Add(childPos,new List<CombineInstance>());
+                        shadowPools.Add(childPos, new List<CombineInstance>());
 
                     shadowPools[childPos].Add(combineInstance);
 
@@ -120,19 +120,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 }
             }
 
-            for (int i = 0; i < transform.childCount; i++)
-            {
-                var child = transform.GetChild(i);
-
-                if (ApplicationIsRunning)
-                {
-                    Destroy(child.gameObject);
-                }
-                else
-                {
-                    DestroyImmediate(child.gameObject);
-                }
-            }
 
             foreach (var shadowPool in shadowPools)
             {
@@ -143,28 +130,34 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 var obj = new GameObject
                 {
                     isStatic = true,
-                    name = $"ShadowMesh[{shadowPool.Key.x}_{shadowPool.Key.y}]",
+                    name = $"ShadowMesh_{currentLayer.layerID} [{shadowPool.Key.x}_{shadowPool.Key.y}]",
                     transform =
                     {
-                        position = new Vector3(shadowPool.Key.x * unitSize, shadowPool.Key.y * unitSize)
+                        position = new Vector3(
+                            shadowPool.Key.x * currentLayer.unitSize,
+                            shadowPool.Key.y * currentLayer.unitSize)
                     }
                 };
 
                 obj.transform.SetParent(transform);
                 var caster = obj.AddComponent<ShadowMeshCaster2D>();
 
-                if (caster != null)
+                if (caster == null) continue;
+
+                caster.SetMesh(mesh);
+                caster.Bounds = new Rect(
+                    -currentLayer.unitSize * 0.5f,
+                    -currentLayer.unitSize * 0.5f,
+                    currentLayer.unitSize,
+                    currentLayer.unitSize);
+
+                if (currentLayer.silhouetteTileRenderer)
                 {
-                    caster.SetMesh(mesh);
-                    caster.Bounds = new Rect(-unitSize * 0.5f, -unitSize * 0.5f, unitSize, unitSize);
-
-                    if (silhouetteTileRenderer)
-                    {
-                        caster.AddSilhouettedRenderer(tilemapRenderer);
-                    }
-
-                    caster.shadowHeight = shadowHeight;
+                    caster.AddSilhouettedRenderer(tilemapRenderer);
                 }
+
+                caster.ShadowHeight = currentLayer.shadowHeight;
+                caster.ZPosition = currentLayer.shadowZPosition;
             }
         }
     }

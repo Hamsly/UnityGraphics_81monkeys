@@ -154,7 +154,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         protected void OnEnable()
         {
-            m_SilhouettedRenderers = new Renderer[0];
+            m_SilhouettedRenderers ??= new Renderer[0];
 
             if (m_InstanceId != GetInstanceID())
             {
@@ -198,8 +198,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public void Update()
         {
-
-
             if (!forceUpdate)
             {
                 if (isStatic) return;

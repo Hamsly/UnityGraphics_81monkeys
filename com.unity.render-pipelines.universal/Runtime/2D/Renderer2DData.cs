@@ -81,6 +81,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField, Reload("Shaders/2D/ShadowSpriteGroup2D.shader")]
         Shader m_ShadowSpriteGroupShader = null;
 
+        [SerializeField, Reload("Shaders/2D/ShadowSpriteBasicGroup2D.shader")]
+        Shader m_ShadowSpriteSimpleGroupShader = null;
+
         [SerializeField, Reload("Shaders/2D/Shadow2DRemoveSelf.shader")]
         Shader m_RemoveSelfShadowShader = null;
 
@@ -110,6 +113,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         internal Shader samplingShader => m_SamplingShader;
         internal Shader shadowMeshGroupShader => m_ShadowMeshGroupShader;
         internal Shader shadowSpriteGroupShader => m_ShadowSpriteGroupShader;
+        internal Shader shadowSpriteSimpleGroupShader => m_ShadowSpriteSimpleGroupShader;
         internal Shader removeSelfShadowShader => m_RemoveSelfShadowShader;
         internal Shader postRenderShadowShader => m_PostRenderShadowShader;
         internal PostProcessData postProcessData { get => m_PostProcessData; set { m_PostProcessData = value; } }
@@ -164,8 +168,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public enum ShadowMaterialTypes
         {
-            MeshShadows,
-            SpriteShadow,
+            MeshShadows = 0,
+            SpriteShadow = 1,
+            SpriteShadowSimple = 2,
 
             Count
         }
@@ -176,6 +181,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 case ShadowMaterialTypes.MeshShadows: return shadowMeshGroupShader;
                 case ShadowMaterialTypes.SpriteShadow: return shadowSpriteGroupShader;
+                case ShadowMaterialTypes.SpriteShadowSimple: return shadowSpriteSimpleGroupShader;
             }
 
             return m_FallbackErrorShader;

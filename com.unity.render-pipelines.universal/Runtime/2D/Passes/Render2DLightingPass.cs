@@ -121,6 +121,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 for (var i = startIndex; i < batchCount; ++i)
                 {
+                    var sampleName = $"Layer Batch {i}";
+                    cmd.BeginSample(sampleName);
+
                     ref var layerBatch = ref layerBatches[i];
 
                     var blendStyleMask = layerBatch.lightStats.blendStylesUsed;
@@ -134,7 +137,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     rtCount += blendStyleCount;
 
                     if (rtCount > LayerUtility.maxTextureCount)
+                    {
+                        cmd.EndSample(sampleName);
                         break;
+                    }
 
                     batchesDrawn++;
 
@@ -149,6 +155,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     {
                         this.RenderLights(renderingData, cmd, layerBatch.startLayerID, ref layerBatch, ref desc);
                     }
+
+                    cmd.EndSample(sampleName);
                 }
             }
 

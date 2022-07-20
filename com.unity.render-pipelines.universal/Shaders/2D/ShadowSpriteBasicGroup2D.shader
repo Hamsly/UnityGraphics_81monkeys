@@ -1,9 +1,9 @@
-Shader "Hidden/ShadowMeshGroup2D"
+Shader "Hidden/ShadowSpriteBasicGroup2D"
 {
     Properties
     {
         _MainTex("Texture", 2D) = "white" {}
-        _ShadowStencilGroup("_ShadowStencilGroup", float) = 1
+        _ShadowStencilGroup("__ShadowStencilGroup", Float) = 1.0
     }
 
     SubShader
@@ -35,10 +35,8 @@ Shader "Hidden/ShadowMeshGroup2D"
             struct Attributes
             {
                 float3 vertex : POSITION;
-                float4 tangent: TANGENT;
                 float2 uv : TEXCOORD0;
                 float2 uv_tex : TEXCOORD1;
-                float4 extrusion : COLOR;
             };
 
             struct Varyings
@@ -46,7 +44,9 @@ Shader "Hidden/ShadowMeshGroup2D"
                 float4 vertex : SV_POSITION;
                 float4 color : COLOR;
                 float2 uv : TEXCOORD0;
+                float2 uv_tex : TEXCOORD1;
             };
+
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
@@ -54,14 +54,23 @@ Shader "Hidden/ShadowMeshGroup2D"
 
             //uniform sampler2D _ShadowImage;
             uniform float3 _LightPos;
-            uniform float _ShadowHeight;
             uniform float3 _ShadowCenter;
-            uniform float _FalloffRate;
+            uniform sampler2D _ShadowTexture;
+            float4 _ShadowTexture_ST;
+            float4 _ShadowBasePos;
+
+
+
 
             Varyings vert (Attributes v)
             {
-                Varyings o;
+
                 float3 vertexWS = TransformObjectToWorld(v.vertex);  // This should be in world space
+
+                float2 v1 = _ShadowBasePos.xy;
+                float2 v2 = _ShadowBasePos.zw;
+
+                vertexWS.z = _ShadowCenter.z + v.vertex.z;
 
                 float3 lightDir;
                 lightDir.xy = _LightPos.xy - vertexWS.xy;
@@ -69,34 +78,23 @@ Shader "Hidden/ShadowMeshGroup2D"
 
                 const float shadowHeightTest = clamp(ceil(_LightPos.z - _ShadowCenter.z), 0, 1);
 
-                /// Calculate the projection distance of the bottom of the shadow
-                float3 botVert = vertexWS;
-                botVert.z = _ShadowCenter.z;
-                const float _BaseOffset = ProjectionDistance(botVert, _LightPos) * botVert.z;
-
-                /// Calculate the projection distance of the top of the shadow
-                float3 topVert = botVert;
-                topVert.z += _ShadowHeight;
-                const float _ProjectionOffset = ProjectionDistance(topVert, _LightPos) * topVert.z;
+                const float _BaseOffset = ProjectionDistance(vertexWS, _LightPos) * vertexWS.z;
 
                 // Start of code to see if this point should be extruded
                 const float3 lightDirection = normalize(lightDir);
 
-                const float3 worldTangent = TransformObjectToWorldDir(v.tangent.xyz);
-                const float sharedShadowTest = saturate(ceil(-dot(lightDirection, worldTangent)));
+                float3 offset =  (_BaseOffset * -lightDirection);
 
-                float3 o1 = (sharedShadowTest * (_ProjectionOffset * -lightDirection));
-                float3 o2 = ((1 - sharedShadowTest) * (_BaseOffset * -lightDirection));
+                const float3 position = vertexWS + offset;
 
-                const float3 position = vertexWS + o1 + o2;
-
+                Varyings o;
                 o.vertex = TransformWorldToHClip(position);
 
                 // RGB - R is shadow value (to support soft shadows), G is Self Shadow Mask, B is No Shadow Mask
-                o.color = shadowHeightTest;//(1 - (length(position - vertexWS.xy) / max(_ProjectionOffset, _FalloffRate))) * shadowHeightTest;  // v.color;
+                o.color.r = shadowHeightTest;  // v.color;
                 o.color.g = 0.5;
                 o.color.b = 0;
-
+                o.uv_tex = TRANSFORM_TEX(v.uv_tex,_ShadowTexture);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 
                 return o;
@@ -106,12 +104,14 @@ Shader "Hidden/ShadowMeshGroup2D"
             {
                 float4 main = tex2D(_MainTex, i.uv);
                 float4 col = i.color;
-                col.g = main.a * col.g;
-
+                const float aa = tex2D(_ShadowTexture,i.uv_tex.xy).a;
+                col.g = main.a * col.g * aa;
+                col.r = aa;
                 return col;
             }
             ENDHLSL
         }
+        /*
         Pass
         {
             Stencil
@@ -150,7 +150,7 @@ Shader "Hidden/ShadowMeshGroup2D"
                 o.vertex = TransformObjectToHClip(v.vertex);
 
                 // RGB - R is shadow value (to support soft shadows), G is Self Shadow Mask, B is No Shadow Mask
-                o.color = 0;// 1;
+                o.color.r = 0;
                 o.color.g = 0.5;
                 o.color.b = 1;
 
@@ -168,5 +168,6 @@ Shader "Hidden/ShadowMeshGroup2D"
             }
             ENDHLSL
         }
+        */
     }
 }

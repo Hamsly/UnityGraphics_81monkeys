@@ -5,7 +5,7 @@ Shader "Hidden/Universal Render Pipeline/ShadowPostRender"
         _MainTex("Texture", 2D) = "white"
     }
 
-        SubShader
+    SubShader
     {
         Tags
         {
@@ -47,31 +47,40 @@ Shader "Hidden/Universal Render Pipeline/ShadowPostRender"
         }
         ENDHLSL
 
+
         Pass
         {
-            Name "BOX BLUR"
-
             HLSLPROGRAM
             half4 frag(Varyings IN) : SV_TARGET
             {
-                float2 res = _MainTex_TexelSize.xy;
-                half4 sum = 0;
+                half4 sumH = 0;
+                half4 sumV = 0;
 
-                int samples = 2 * _BlurStrength + 1;
+                #define GRABPIXELH(weight,kernel) SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, float2(IN.uv.x + kernel * _MainTex_TexelSize.x, IN.uv.y)) * weight
 
-                for (float y = 0; y < samples; y++)
-                {
-                    float2 offset = float2(0, y - _BlurStrength);
-                    sum += SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + offset * res);
-                }
+                sumH += GRABPIXELH(0.05, -4.0);
+                sumH += GRABPIXELH(0.09, -3.0);
+                sumH += GRABPIXELH(0.12, -2.0);
+                sumH += GRABPIXELH(0.15, -1.0);
+                sumH += GRABPIXELH(0.18,  0.0);
+                sumH += GRABPIXELH(0.15, +1.0);
+                sumH += GRABPIXELH(0.12, +2.0);
+                sumH += GRABPIXELH(0.09, +3.0);
+                sumH += GRABPIXELH(0.05, +4.0);
 
-                for (float x = 0; x < samples; x++)
-                {
-                    float2 offset = float2(x - _BlurStrength, 0);
-                    sum += SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + offset * res);
-                }
+                #define GRABPIXELV(weight,kernel) SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, float2(IN.uv.x, IN.uv.y + kernel * _MainTex_TexelSize.y)) * weight
 
-                return sum / (samples * 2);
+                sumV += GRABPIXELV(0.05, -4.0);
+                sumV += GRABPIXELV(0.09, -3.0);
+                sumV += GRABPIXELV(0.12, -2.0);
+                sumV += GRABPIXELV(0.15, -1.0);
+                sumV += GRABPIXELV(0.18,  0.0);
+                sumV += GRABPIXELV(0.15, +1.0);
+                sumV += GRABPIXELV(0.12, +2.0);
+                sumV += GRABPIXELV(0.09, +3.0);
+                sumV += GRABPIXELV(0.05, +4.0);
+
+                return (sumH + sumV) / 2;
             }
             ENDHLSL
         }
