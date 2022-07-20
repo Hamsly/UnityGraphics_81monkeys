@@ -85,8 +85,8 @@ Shader "Hidden/ShadowMeshGroup2D"
                 const float3 worldTangent = TransformObjectToWorldDir(v.tangent.xyz);
                 const float sharedShadowTest = saturate(ceil(-dot(lightDirection, worldTangent)));
 
-                float3 o1 = (sharedShadowTest * (_ProjectionOffset * -lightDirection));
-                float3 o2 = ((1 - sharedShadowTest) * (_BaseOffset * -lightDirection));
+                const float3 o1 = (sharedShadowTest * (_ProjectionOffset * -lightDirection));
+                const float3 o2 = ((1 - sharedShadowTest) * (_BaseOffset * -lightDirection));
 
                 const float3 position = vertexWS + o1 + o2;
 

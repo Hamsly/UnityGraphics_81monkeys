@@ -116,11 +116,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public static void RenderShadows(IRenderPass2D pass, RenderingData renderingData, CommandBuffer cmdBuffer, int layerToRender, Light2D light, float shadowIntensity, RenderTargetIdentifier renderTexture)
         {
-            RenderTargetIdentifier workingTexture = new RenderTargetIdentifier();
+
 
 
              // Blur Set up
              /*
+
+            RenderTargetIdentifier workingTexture = new RenderTargetIdentifier();
             workingTexture = m_WorkingTexture.id;
             CreateShadowRenderTexture(pass, m_WorkingTexture, renderingData, cmdBuffer);
 

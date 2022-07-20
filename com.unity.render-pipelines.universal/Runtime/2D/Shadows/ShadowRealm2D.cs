@@ -20,9 +20,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public Rect WorldRect;
 
-        [SerializeField] private QuadTree<ShadowCaster2D> shadowTreeA;
-        [SerializeField] private QuadTree<ShadowCaster2D> shadowTreeB;
-        [SerializeField] private QuadTree<ShadowCaster2D> staticShadowTree;
+        private QuadTree<ShadowCaster2D> shadowTreeA;
+        private QuadTree<ShadowCaster2D> shadowTreeB;
+        private QuadTree<ShadowCaster2D> staticShadowTree;
 
         public static event Action OnInit;
 
