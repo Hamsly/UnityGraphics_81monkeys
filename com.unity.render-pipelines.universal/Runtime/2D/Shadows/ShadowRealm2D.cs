@@ -34,7 +34,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public bool HasDoneInit { get; private set; } = false;
 
-        public Camera ShadowCamera => shadowCamera;
+        public Camera ShadowCamera
+        {
+            get => shadowCamera;
+            set => shadowCamera = value;
+        }
 
         private void OnEnable()
         {
