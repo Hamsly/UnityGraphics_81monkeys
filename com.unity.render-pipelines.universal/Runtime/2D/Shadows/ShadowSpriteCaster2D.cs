@@ -189,7 +189,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             cmdBuffer.SetGlobalTexture(k_ShadowTexture, texture);
 
             var position = transform.position;
-            cmdBuffer.SetGlobalVector(k_ShadowBasePos, new Vector4(position.x,position.y,m_ZPosition,0));
+            cmdBuffer.SetGlobalVector(k_ShadowBasePos, new Vector4(position.x,position.y,ZPosition,0));
 
             Vector2 lightPos = (Vector2)light.transform.position - new Vector2(shadowPosition.x, shadowPosition.y);
             float dir;

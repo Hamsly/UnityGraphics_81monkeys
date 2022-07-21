@@ -14,6 +14,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering.Universal;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.Serialization;
 using UnityEngine.Tilemaps;
 using Random = UnityEngine.Random;
@@ -85,7 +86,8 @@ namespace UnityEditor.Experimental.Rendering.Universal
         [SerializeField] private Vector2Int remapTarget1 = Vector2Int.zero;
         [SerializeField] private Vector2Int remapTarget2 = Vector2Int.zero;
 
-        [SerializeField] private Vector2Int noiseAmount = Vector2Int.zero;
+        [SerializeField] private Vector2Int noiseMax = Vector2Int.zero;
+        [SerializeField] private Vector2Int noiseMin = Vector2Int.zero;
         [SerializeField] private float noiseChaos = 1;
 
         private readonly List<Color[]> _undoBuffer = new List<Color[]>();
@@ -645,7 +647,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
                         {
                             for (int texY = minY; texY <= maxY; texY++)
                             {
-                                SetTextureOffsetNoise(texX, texY, noiseAmount,noiseChaos);
+                                SetTextureOffsetNoise(texX, texY, noiseMax,noiseMin,noiseChaos);
                             }
                         }
 
@@ -712,30 +714,37 @@ namespace UnityEditor.Experimental.Rendering.Universal
             return new Color(r, g, b, 1);
         }
 
+        private Vector2Int ColorToOffset(Color color)
+        {
+            int x = (int)(color.r * 255) - 128;
+            int gx = (int)(color.g * 255) & 0xf;
+
+            int y = (int)(color.b * 255) - 128;
+            int gy = ((int)(color.g * 255) >> 4) & 0xf;
+
+            x += gx * (int)Mathf.Sign(x) * 127;
+            y += gy * (int)Mathf.Sign(y) * 127;
+
+            return new Vector2Int(-x, y);
+        }
+
 
         /// <summary>
-        /// Generates a random value between a min and mav value that can be biased toward the mean value
+        /// Generates a random value between a min and max value
         /// </summary>
         /// <param name="min"></param>
         /// <param name="max"></param>
         /// <param name="chaos"></param>
         /// <returns></returns>
-        private static float RandomNoiseValue(float min, float max, float chaos)
+        private static float RandomNoiseValue(int x, int y,float min, float max, float chaos, int seed = 0)
         {
-            chaos = Mathf.Clamp01(chaos);
+            chaos = Mathf.Clamp(chaos, 0.01f, 0.99f);
 
-            var mid1 = Mathf.Lerp(min, max, Mathf.Lerp(0.5f, 0.33f, chaos));
-            var mid2 = Mathf.Lerp(max, min, Mathf.Lerp(0.5f, 0.33f, chaos));
+            float xx = x * chaos + seed;
+            float yy = y * chaos + seed;
 
-            float r = Random.value;
-            var xx1 = Mathf.Lerp(min, mid1, r);
-            var xx2 = Mathf.Lerp(mid1, mid2, r);
-            var xx3 = Mathf.Lerp(mid2, max, r);
-
-            var xxx1 = Mathf.Lerp(xx1, xx2, r);
-            var xxx2 = Mathf.Lerp(xx2, xx3, r);
-
-            return Mathf.Lerp(xxx1, xxx2,r);
+            float t = Mathf.Clamp01(Mathf.PerlinNoise(xx, yy));
+            return Mathf.Lerp(min,max, t);
         }
 
         /// <summary>
@@ -745,21 +754,20 @@ namespace UnityEditor.Experimental.Rendering.Universal
         /// <param name="max"></param>
         /// <param name="chaos"></param>
         /// <returns></returns>
-        private void SetTextureOffsetNoise(int x, int y,Vector2Int noiseAmount, float chaos)
+        private void SetTextureOffsetNoise(int x, int y,Vector2Int noiseMax ,Vector2Int noiseMin, float chaos)
         {
+            var seed = (int)Time.time;
+
             y = (_workingTexture.height) - (y + 1);
 
             if (x < 0 || x >= _workingTexture.width || y < 0 || y >= _workingTexture.height) return;
 
-            var prevCol = _workingTexture.GetPixel(x, y);
+            var xx = Mathf.RoundToInt(RandomNoiseValue(x,y,noiseMin.x, noiseMax.x, chaos,seed));
+            var yy = Mathf.RoundToInt(RandomNoiseValue(x,y,noiseMin.y, noiseMax.y, chaos,seed - 1000));
 
-            var xx = (int)((prevCol.r * 255f) - 127f);
-            var yy = (int)((prevCol.b * 255f) - 127f);
+            var prevOffset = ColorToOffset(_workingTexture.GetPixel(x, y));
+            var col = OffsetToColor(prevOffset.x + xx, prevOffset.y + yy);
 
-            xx += Mathf.RoundToInt(RandomNoiseValue(-noiseAmount.x, noiseAmount.x, chaos));
-            yy += Mathf.RoundToInt(RandomNoiseValue(-noiseAmount.y, noiseAmount.y, chaos));
-
-            var col = new Color((xx + 127f) / 255f,0,(yy + 127f) / 255f,1);
             _workingTexture.SetPixel(x,y,col);
         }
 
@@ -947,8 +955,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
                     EditorGUILayout.BeginVertical();
                     GUILayout.FlexibleSpace();
 
-                    noiseAmount = EditorGUILayout.Vector2IntField(
-                        new GUIContent("Noise Level:", "The outer bounds of the applied noise"), noiseAmount);
+                    noiseMax = EditorGUILayout.Vector2IntField(
+                        new GUIContent("Noise Max:", "The Max bounds of the applied noise"), noiseMax);
+
+                    noiseMin = EditorGUILayout.Vector2IntField(
+                        new GUIContent("Noise Min:", "The Min bounds of the applied noise"), noiseMin);
 
                     GUILayout.FlexibleSpace();
                     EditorGUILayout.EndVertical();
@@ -958,8 +969,8 @@ namespace UnityEditor.Experimental.Rendering.Universal
                     EditorGUILayout.BeginVertical();
                     GUILayout.FlexibleSpace();
 
-                    noiseChaos = EditorGUILayout.FloatField(
-                            new GUIContent("Noise Chaose:", "The end point to remap from"), noiseChaos);
+                    EditorGUILayout.LabelField(new GUIContent("Noise Scale:", "The end point to remap from"));
+                    noiseChaos = Mathf.Clamp01(EditorGUILayout.Slider(noiseChaos,0,1));
 
                     GUILayout.FlexibleSpace();
                     EditorGUILayout.EndVertical();

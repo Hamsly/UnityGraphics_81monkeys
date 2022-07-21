@@ -88,6 +88,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             public static GUIContent silhouettedRenderer = EditorGUIUtility.TrTextContent("Silhouetted Renderers", "The Renderers to use for the Silhouette");
             public static GUIContent castsShadows = EditorGUIUtility.TrTextContent("Casts Shadows", "Specifies if this renderer will cast shadows");
             public static GUIContent height = EditorGUIUtility.TrTextContent("Shadow Height", "The simulated height of the shadow");
+            public static GUIContent useTransformZ = EditorGUIUtility.TrTextContent("Use TransformZ", "Use the transform's Z as the simulated Z Position of the shadow");
             public static GUIContent zPosition = EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
             public static GUIContent ShapePath = EditorGUIUtility.TrTextContent("Shadow Path", "The shape path of the Shadow");
             public static GUIContent sortingLayerPrefixLabel = EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
@@ -99,10 +100,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
         SerializedProperty m_SelfShadows;
         SerializedProperty m_ReceivesShadows;
         SerializedProperty m_Height;
+        SerializedProperty m_UseTransformZ;
         SerializedProperty m_ZPosition;
         SerializedProperty m_ShapePath;
-        SerializedProperty m_FalloffRate;
-        //SerializedProperty m_ShadowTexture;
 
 
         SortingLayerDropDown m_SortingLayerDropDown;
@@ -116,9 +116,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             m_Height = serializedObject.FindProperty("m_Height");
             m_ZPosition = serializedObject.FindProperty("m_ZPosition");
             m_ShapePath = serializedObject.FindProperty("m_ShapePath");
-            m_FalloffRate = serializedObject.FindProperty("m_FalloffRate");
-            //m_ShadowTexture = serializedObject.FindProperty("m_ShadowTexture");
-
+            m_UseTransformZ = serializedObject.FindProperty("m_UseTransformZ");
             m_SortingLayerDropDown = new SortingLayerDropDown();
             m_SortingLayerDropDown.OnEnable(serializedObject, "m_ApplyToSortingLayers");
         }
@@ -181,7 +179,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             EditorGUILayout.PropertyField(m_CastsShadows, Styles.castsShadows);
             EditorGUILayout.PropertyField(m_Height, Styles.height);
-            EditorGUILayout.PropertyField(m_ZPosition, Styles.zPosition);
+            EditorGUILayout.PropertyField(m_UseTransformZ, Styles.useTransformZ);
+            if (!m_UseTransformZ.boolValue)
+            {
+                EditorGUILayout.PropertyField(m_ZPosition, Styles.zPosition);
+            }
 
             m_SortingLayerDropDown.OnTargetSortingLayers(serializedObject, targets, Styles.sortingLayerPrefixLabel, null);
 

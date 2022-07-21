@@ -59,6 +59,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
             public static GUIContent direction =
                 EditorGUIUtility.TrTextContent("Shadow Direction", "The simulated direction of the shadow");
 
+            public static GUIContent useTransformZ =
+                EditorGUIUtility.TrTextContent("Use TransformZ", "Use the transform's Z as the simulated Z Position of the shadow");
+
             public static GUIContent zPosition =
                 EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
 
@@ -75,6 +78,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         SerializedProperty m_SilhouettedRenderers;
         SerializedProperty m_CastsShadows;
         SerializedProperty m_ReceivesShadows;
+        SerializedProperty m_UseTransformZ;
         SerializedProperty m_ZPosition;
         SerializedProperty m_Texture;
         SerializedProperty m_SpriteCasterType;
@@ -93,6 +97,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             m_Direction = serializedObject.FindProperty("m_Direction");
             m_SilhouettedRenderers = serializedObject.FindProperty("m_SilhouettedRenderers");
             m_CastsShadows = serializedObject.FindProperty("m_CastsShadows");
+            m_UseTransformZ = serializedObject.FindProperty("m_UseTransformZ");
             m_ZPosition = serializedObject.FindProperty("m_ZPosition");
             m_Texture = serializedObject.FindProperty("m_Texture");
             m_SpriteCasterType = serializedObject.FindProperty("m_SpriteCasterType");
@@ -143,7 +148,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
 
             EditorGUILayout.PropertyField(m_CastsShadows, Styles.castsShadows);
-            EditorGUILayout.PropertyField(m_ZPosition, Styles.zPosition);
+            EditorGUILayout.PropertyField(m_UseTransformZ, Styles.useTransformZ);
+            if (!m_UseTransformZ.boolValue)
+            {
+                EditorGUILayout.PropertyField(m_ZPosition, Styles.zPosition);
+            }
 
             m_SortingLayerDropDown.OnTargetSortingLayers(serializedObject, targets, Styles.sortingLayerPrefixLabel, null);
 

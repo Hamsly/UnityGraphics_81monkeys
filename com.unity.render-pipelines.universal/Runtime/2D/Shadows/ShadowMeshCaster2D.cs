@@ -22,7 +22,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] int m_ShapePathHash = 0;
         [SerializeField] Mesh m_Mesh;
 
-
         internal Mesh mesh => m_Mesh;
         internal Vector3[] shapePath => m_ShapePath;
         internal int shapePathHash { get { return m_ShapePathHash; } set { m_ShapePathHash = value; } }
@@ -34,12 +33,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             set => m_Height = value;
             get => m_Height;
-        }
-
-        public float ZPosition
-        {
-            set => m_ZPosition = value;
-            get => m_ZPosition;
         }
 
         private new void Awake()
@@ -157,7 +150,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                 pp.x *= lossyScale.x;
                 pp.y *= lossyScale.y;
-                pp.y += m_ZPosition;
 
                 var point = pp + transformRef.position;
                 Gizmos.DrawLine(point, point + new Vector3(0, ShadowHeight, 0));

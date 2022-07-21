@@ -54,6 +54,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 float2  uv          : TEXCOORD0;
                 half2   lightingUV  : TEXCOORD1;
                 float2  scale       : TEXCOORD2;
+                float3  positionWS  : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -96,6 +97,9 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
 
+
+                o.positionWS = TransformObjectToWorld(v.positionOS);
+
                 o.positionCS = TransformObjectToHClip(v.positionOS);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 
@@ -121,7 +125,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
                 int g = hh.g * 128;
                 float xx = ((hh.r * 255) - 127) + _ObjectOffset.x;
-                float yy = ((hh.b * 255) - 127) + _ObjectOffset.y;
+                float yy = ((hh.b * 255) - 127) + _ObjectOffset.y - (i.positionWS.z * 32);
 
                 xx += (g & 0xF) * 256 * sign(xx);
                 yy += (g >> 4 & 0xF) * 256 * sign(xx);

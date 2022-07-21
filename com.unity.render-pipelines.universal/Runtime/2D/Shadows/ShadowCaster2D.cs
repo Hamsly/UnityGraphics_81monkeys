@@ -17,7 +17,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] protected Renderer[] m_SilhouettedRenderers;
         [SerializeField] protected bool m_HasRenderer = false;
         [SerializeField] protected bool m_UseRendererSilhouette = true;
-        [SerializeField] protected float m_ZPosition = 0f;
+        [SerializeField] private bool m_UseTransformZ = true;
+        [SerializeField] private float m_ZPosition = 0f;
         [SerializeField] protected int m_InstanceId;
         [SerializeField] bool m_CastsShadows = true;
         [SerializeField] int[] m_ApplyToSortingLayers = null;
@@ -45,6 +46,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 m_Bounds = value;
             }
+        }
+
+        public float ZPosition
+        {
+            set => m_ZPosition = value;
+            get => m_UseTransformZ ? -transform.position.z : m_ZPosition;
         }
 
         int m_PreviousShadowGroup = 0;
@@ -98,7 +105,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             get
             {
                 var pos = transform.position;
-                return new Vector3(pos.x, pos.y, m_ZPosition);
+                return new Vector3(pos.x, pos.y, ZPosition);
             }
         }
 
