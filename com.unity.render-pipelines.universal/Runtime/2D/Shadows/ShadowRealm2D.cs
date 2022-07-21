@@ -1,9 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Serialization;
-using UnityEngine.SceneManagement;
 
 
 namespace UnityEngine.Experimental.Rendering.Universal
@@ -45,7 +42,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             if (WorldRect.width != 0 && WorldRect.height != 0)
             {
-                InitShadow2DWorld(WorldRect);
+                InitShadow2DWorld(shadowCamera,WorldRect);
             }
         }
 
@@ -56,8 +53,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
             Instance = this;
         }
 
-        public void InitShadow2DWorld(Rect rect)
+        public void InitShadow2DWorld(Camera shadowCamera, Bounds bounds)
         {
+            Rect rect = new Rect(bounds.min, bounds.size);
+            InitShadow2DWorld(shadowCamera, rect);
+        }
+
+        public void InitShadow2DWorld(Camera shadowCamera,Rect rect)
+        {
+            this.shadowCamera = shadowCamera;
+
             shadowTreeA = new QuadTree<ShadowCaster2D>(rect,UnitSize);
             shadowTreeB = new QuadTree<ShadowCaster2D>(rect,UnitSize);
             staticShadowTree = new QuadTree<ShadowCaster2D>(rect,UnitSize);
