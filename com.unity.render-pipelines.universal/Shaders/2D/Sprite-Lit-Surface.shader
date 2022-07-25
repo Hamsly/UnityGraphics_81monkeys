@@ -1,4 +1,4 @@
-Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
+Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
 {
     Properties
     {
@@ -26,7 +26,6 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
             "Queue" = "Transparent"
             "RenderType" = "Transparent"
             "RenderPipeline" = "UniversalPipeline"
-            "DisableBatching"="True"
         }
 
         Blend SrcAlpha OneMinusSrcAlpha
@@ -100,8 +99,6 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-
-                v.positionOS.z = -v.positionOS.y;
 
                 o.positionWS = TransformObjectToWorld(v.positionOS);
 
