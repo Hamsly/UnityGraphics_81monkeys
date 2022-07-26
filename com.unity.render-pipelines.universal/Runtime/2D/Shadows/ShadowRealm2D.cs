@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 namespace UnityEngine.Experimental.Rendering.Universal
 {
-    [ExecuteInEditMode]
     public class ShadowRealm2D : MonoBehaviour
     {
         public static ShadowRealm2D Instance;
