@@ -170,7 +170,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
             SpriteShadow = 1,
             SpriteShadowSimple = 2,
 
-            Count
+            Count,
+
+            Custom
         }
 
         public Shader GetShaderType(ShadowMaterialTypes shadowMaterialType)

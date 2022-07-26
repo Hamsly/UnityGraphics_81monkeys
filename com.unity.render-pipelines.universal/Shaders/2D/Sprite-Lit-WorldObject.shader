@@ -6,10 +6,13 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
         _MaskTex("Mask", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}
         _OffsetMap("Offset Map", 2D) = "black" {}
+        _OverlayColor("Overlay", Color) = (1,1,1,0)
         [PerRendererData] _ObjectOffset("Object Offset", Vector) = (0,0,0,0)
+
 
         // Legacy properties. They're here so that materials using this shader can gracefully fallback to the legacy sprite shader.
         [HideInInspector] _Color("Tint", Color) = (1,1,1,1)
+
         [HideInInspector] _RendererColor("RendererColor", Color) = (1,1,1,1)
         [HideInInspector] _Flip("Flip", Vector) = (1,1,1,1)
         [HideInInspector] _AlphaTex("External Alpha", 2D) = "white" {}
@@ -48,7 +51,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
             {
                 float3 positionOS   : POSITION;
                 float4 color        : COLOR;
-                float2  uv          : TEXCOORD0;
+                float2 uv           : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -59,7 +62,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 float2  uv          : TEXCOORD0;
                 half2   lightingUV  : TEXCOORD1;
                 float2  scale       : TEXCOORD2;
-                float3  positionWS  : TEXCOORD3;
+                float4  positionWS  : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -75,6 +78,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
             half4 _MainTex_ST;
             float4 _ObjectOffset;
+            float4 _OverlayColor;
 
             #if USE_SHAPE_LIGHT_TYPE_0
             SHAPE_LIGHT(0)
@@ -103,11 +107,10 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
                 v.positionOS.z = -v.positionOS.y;
 
-                o.positionWS = TransformObjectToWorld(v.positionOS);
+                o.positionWS = float4(TransformObjectToWorld(v.positionOS),-v.positionOS.y);
 
                 o.positionCS = TransformObjectToHClip(v.positionOS);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-
 
                 float2 lp = ComputeScreenPos(TransformObjectToHClip(v.positionOS + float3(1,1,0))).xy;
 
@@ -130,13 +133,15 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
                 int g = hh.g * 128;
                 float xx = ((hh.r * 255) - 127) + _ObjectOffset.x;
-                float yy = ((hh.b * 255) - 127) + _ObjectOffset.y - (i.positionWS.z * 32);
+                float yy = ((hh.b * 255) - 127) + _ObjectOffset.y - ((i.positionWS.z - i.positionWS.w) * 32);
 
                 xx += (g & 0xF) * 256 * sign(xx);
                 yy += (g >> 4 & 0xF) * 256 * sign(xx);
 
                 const float2 offset = float2(xx * (i.scale.x),-yy * (i.scale.y));
-                return CombinedShapeLightShared(main, mask, i.lightingUV + offset);
+
+                float4 col = CombinedShapeLightShared(main, mask, i.lightingUV + offset);
+                return float4(lerp(col.rgb,_OverlayColor.rgb,_OverlayColor.a),col.a);
             }
             ENDHLSL
         }

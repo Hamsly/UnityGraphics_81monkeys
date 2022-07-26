@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-
+using PlasticGui;
 using UnityEditor;
 using UnityEditor.EditorTools;
 using UnityEditor.Experimental.Rendering.Universal.Path2D;
@@ -10,9 +10,9 @@ using UnityEngine.Experimental.Rendering.Universal;
 namespace UnityEditor.Experimental.Rendering.Universal
 {
 
-    [CustomEditor(typeof(ShadowSpriteCaster2D))]
+    [CustomEditor(typeof(ShadowCustomCaster2D))]
     [CanEditMultipleObjects]
-    internal class ShadowSpriteCaster2DEditor : Editor
+    internal class ShadowCustomCaster2DEditor : Editor
     {
         class ShadowCaster2DShadowCasterShapeTool : ShadowCaster2DShapeTool
         {
@@ -38,26 +38,18 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
         private static class Styles
         {
-            public static GUIContent shadowMode = EditorGUIUtility.TrTextContent("Use Renderer Silhouette",
-                "When this and Self Shadows are enabled, the Renderer's silhouette is considered part of the shadow. When this is enabled and Self Shadows disabled, the Renderer's silhouette is excluded from the shadow.");
-
-            public static GUIContent shadowTexture = EditorGUIUtility.TrTextContent("Shadow Texture","The reference texture the cast.");
-            public static GUIContent size = EditorGUIUtility.TrTextContent("Size","The simulated size of the caster");
 
             public static GUIContent silhouettedRenderer =
                 EditorGUIUtility.TrTextContent("Silhouetted Renderers", "The Renderers to use for the Silhouette");
 
-            public static GUIContent spriteCasterType =
-                EditorGUIUtility.TrTextContent("Sprite Caster Type", "General rules for generating the shadow mesh");
+            public static GUIContent renderer =
+                EditorGUIUtility.TrTextContent("Renderer", "The Renderer to call upon when drawing the shadow");
 
-            public static GUIContent reorientPerLight =
-                EditorGUIUtility.TrTextContent("Reorient Per Light", "When enabled, the mesh will rotate towards the currently rendering light");
+            public static GUIContent passes =
+                EditorGUIUtility.TrTextContent("Shader Passes", "The passes of the renderer's material that will get used to draw shadows. -1 for all passes");
 
             public static GUIContent castsShadows =
                 EditorGUIUtility.TrTextContent("Casts Shadows", "Specifies if this renderer will cast shadows");
-
-            public static GUIContent direction =
-                EditorGUIUtility.TrTextContent("Shadow Direction", "The simulated direction of the shadow");
 
             public static GUIContent useTransformZ =
                 EditorGUIUtility.TrTextContent("Use TransformZ", "Use the transform's Z as the simulated Z Position of the shadow");
@@ -67,23 +59,15 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             public static GUIContent sortingLayerPrefixLabel =
                 EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
-
-            public static GUIContent basePoint =
-                EditorGUIUtility.TrTextContent("Base Point", "The normalized y position on the texture we begin drawing from.");
         }
 
         SerializedProperty m_UseRendererSilhouette;
-        SerializedProperty m_Size;
-        SerializedProperty m_Direction;
         SerializedProperty m_SilhouettedRenderers;
+        SerializedProperty m_Renderer;
+        SerializedProperty m_Passes;
         SerializedProperty m_CastsShadows;
-        SerializedProperty m_ReceivesShadows;
         SerializedProperty m_UseTransformZ;
         SerializedProperty m_ZPosition;
-        SerializedProperty m_Texture;
-        SerializedProperty m_SpriteCasterType;
-        SerializedProperty m_ReorientPerLight;
-        SerializedProperty m_basePoint;
 
 
         SortingLayerDropDown m_SortingLayerDropDown;
@@ -92,16 +76,12 @@ namespace UnityEditor.Experimental.Rendering.Universal
         public void OnEnable()
         {
             m_UseRendererSilhouette = serializedObject.FindProperty("m_UseRendererSilhouette");
-            m_Size = serializedObject.FindProperty("m_Size");
-            m_Direction = serializedObject.FindProperty("m_Direction");
             m_SilhouettedRenderers = serializedObject.FindProperty("m_SilhouettedRenderers");
+            m_Renderer = serializedObject.FindProperty("m_targetRenderer");
+            m_Passes = serializedObject.FindProperty("m_targetPasses");
             m_CastsShadows = serializedObject.FindProperty("m_CastsShadows");
             m_UseTransformZ = serializedObject.FindProperty("m_UseTransformZ");
             m_ZPosition = serializedObject.FindProperty("m_ZPosition");
-            m_Texture = serializedObject.FindProperty("m_Texture");
-            m_SpriteCasterType = serializedObject.FindProperty("m_SpriteCasterType");
-            m_ReorientPerLight = serializedObject.FindProperty("m_ReorientPerLight");
-            m_basePoint = serializedObject.FindProperty("m_basePoint");
 
             m_SortingLayerDropDown = new SortingLayerDropDown();
             m_SortingLayerDropDown.OnEnable(serializedObject, "m_ApplyToSortingLayers");
@@ -132,16 +112,10 @@ namespace UnityEditor.Experimental.Rendering.Universal
             ShadowSpriteCaster2D shadowSpriteCaster = serializedObject.targetObject as ShadowSpriteCaster2D;
             serializedObject.Update();
 
-            EditorGUILayout.PropertyField(m_Texture, Styles.shadowTexture);
-            EditorGUILayout.PropertyField(m_basePoint, Styles.basePoint);
-            EditorGUILayout.PropertyField(m_SpriteCasterType, Styles.spriteCasterType);
-            EditorGUILayout.PropertyField(m_ReorientPerLight, Styles.reorientPerLight);
-            EditorGUILayout.PropertyField(m_Size, Styles.size);
-            EditorGUILayout.PropertyField(m_Direction, Styles.direction);
+            EditorGUILayout.PropertyField(m_Renderer, Styles.renderer);
+            EditorGUILayout.PropertyField(m_Passes, Styles.passes);
+
             EditorGUILayout.PropertyField(m_SilhouettedRenderers, Styles.silhouettedRenderer);
-
-
-            EditorGUILayout.PropertyField(m_UseRendererSilhouette, Styles.shadowMode);
 
 
             EditorGUILayout.PropertyField(m_CastsShadows, Styles.castsShadows);

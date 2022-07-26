@@ -243,7 +243,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
         }
 
-        public virtual void CastShadows(CommandBuffer cmdBuffer,int layerToRender,Light2D light,Material material)
+        public virtual void CastShadows(CommandBuffer cmdBuffer,int layerToRender,Light2D light,Material material, int groupIndex)
         {
         }
 

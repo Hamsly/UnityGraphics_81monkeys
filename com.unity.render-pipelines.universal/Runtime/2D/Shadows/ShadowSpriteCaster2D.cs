@@ -182,7 +182,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             base.Update();
         }
 
-        public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material)
+        public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material,int groupIndex)
         {
             if (!castsShadows || material == null || !IsShadowedLayer(layerToRender)) return;
             cmdBuffer.SetGlobalVector(k_ShadowCenterID, shadowPosition);

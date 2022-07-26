@@ -89,6 +89,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         private static Material GetShadowMaterial(this Renderer2DData rendererData,Renderer2DData.ShadowMaterialTypes shadowMaterialType, int index)
         {
+            if (shadowMaterialType == Renderer2DData.ShadowMaterialTypes.Custom) return null;
+
             var shadowMaterialIndex = index % 255;
             if (rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex] == null)
             {
@@ -186,7 +188,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                         continue;
 
                     var shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
-                    shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial);
+                    shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial,incrementingGroupIndex);
 
                     if (shadowCaster.useRendererSilhouette)
                     {
