@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] private ShadowPipelineRendererReference m_RenderRef;
 
         [SerializeField] private ShadowPipelineRendererReference[] m_SilhouettedRendererRefs;
-        public override bool HasSilhouettedRenderer => (m_SilhouettedRenderers?.Length ?? 0) > 0;
+        public override bool HasSilhouettedRenderer => (m_SilhouettedRendererRefs?.Length ?? 0) > 0;
 
         private static readonly int k_ShadowStencilGroupID = Shader.PropertyToID("_ShadowStencilGroup");
         private new void Awake()
