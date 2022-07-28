@@ -59,13 +59,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             if (!useRendererSilhouette || !IsShadowedLayer(layerToRender)) return;
 
-            var renderers = m_SilhouettedRendererRefs;
-            if (renderers == null) return;
+            if (m_SilhouettedRendererRefs == null) return;
 
-            foreach (var currentRenderer in renderers)
+            foreach (var currentRenderer in m_SilhouettedRendererRefs)
             {
                 if (currentRenderer == null) continue;
-                if (currentRenderer.TargetRenderer || currentRenderer.Material == null) continue;
+                if (currentRenderer.TargetRenderer == null || currentRenderer.Material == null) continue;
+
                 var targetMaterial = currentRenderer.Material;
 
                 targetMaterial.SetFloat(k_ShadowStencilGroupID,groupIndex);
