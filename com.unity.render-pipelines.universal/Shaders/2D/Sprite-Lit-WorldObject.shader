@@ -20,7 +20,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
     }
 
     HLSLINCLUDE
-    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+    #include "Packages/com.unity.render-pipelines.universal/Shaders/2D/Include/OffsetMapUtility.hlsl"
     ENDHLSL
 
     SubShader
@@ -96,7 +96,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
             SHAPE_LIGHT(3)
             #endif
 
-            Varyings CombinedShapeLightVertex(Attributes v)
+            Varyings CombinedShapeLightVertex(Attributes a)
             {
                 const int pixelsPerUnit = 32;
 
@@ -105,20 +105,19 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                v.positionOS.z = -v.positionOS.y;
+                a.positionOS.y += -TransformObjectToWorld(a.positionOS).z;
+                a.positionOS.z = -a.positionOS.y;
 
-                o.positionWS = float4(TransformObjectToWorld(v.positionOS),-v.positionOS.y);
+                o.positionWS = float4(TransformObjectToWorld(a.positionOS),-a.positionOS.y);
 
-                o.positionCS = TransformObjectToHClip(v.positionOS);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-
-                float2 lp = ComputeScreenPos(TransformObjectToHClip(v.positionOS + float3(1,1,0))).xy;
+                o.positionCS = TransformObjectToHClip(a.positionOS);
+                o.uv = TRANSFORM_TEX(a.uv, _MainTex);
 
                 o.lightingUV = float2(ComputeScreenPos(o.positionCS).xy);
 
-                o.scale = (lp - o.lightingUV) / pixelsPerUnit;
+                o.scale = GetScale(a.positionOS,o.lightingUV);
 
-                o.color = v.color;
+                o.color = a.color;
                 return o;
             }
 
@@ -129,16 +128,11 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 const float4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 const half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
 
-                float4 hh = SAMPLE_TEXTURE2D(_OffsetMap,sampler_OffsetMap, i.uv);
+                float2 decodedOffset = DecodeOffset(SAMPLE_TEXTURE2D(_OffsetMap,sampler_OffsetMap, i.uv));
 
-                int g = hh.g * 128;
-                float xx = ((hh.r * 255) - 127) + _ObjectOffset.x;
-                float yy = ((hh.b * 255) - 127) + _ObjectOffset.y - ((i.positionWS.z - i.positionWS.w) * 32);
-
-                xx += (g & 0xF) * 256 * sign(xx);
-                yy += (g >> 4 & 0xF) * 256 * sign(xx);
-
-                const float2 offset = float2(xx * (i.scale.x),-yy * (i.scale.y));
+                decodedOffset.x += _ObjectOffset.x;
+                decodedOffset.y += _ObjectOffset.y - ((i.positionWS.z - i.positionWS.w) * PIXELS_PER_UNIT);
+                const float2 offset = float2(decodedOffset.x * (i.scale.x),decodedOffset.y * (i.scale.y));
 
                 float4 col = CombinedShapeLightShared(main, mask, i.lightingUV + offset);
                 return float4(lerp(col.rgb,_OverlayColor.rgb,_OverlayColor.a),col.a);

@@ -67,7 +67,7 @@ Shader "Hidden/ShadowSpriteGroup2D"
             uniform sampler2D _ShadowTexture;
             uniform float4 _ShadowInfo;
             float4 _ShadowTexture_ST;
-            float4 _ShadowBasePos;
+            uniform float3 _ShadowCenter;
 
             Varyings newShadowVertex(float alpha, float3 vertexPos,float2 uv)
             {
@@ -120,7 +120,7 @@ Shader "Hidden/ShadowSpriteGroup2D"
             {
                 GeomData o;
 
-                o.vertex = _ShadowBasePos;
+                o.vertex = float4(_ShadowCenter,0);
                 o.uv_tex = v.uv_tex;
                 o.uv = v.uv;
 
