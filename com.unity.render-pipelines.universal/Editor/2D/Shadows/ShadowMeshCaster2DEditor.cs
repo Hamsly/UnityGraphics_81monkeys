@@ -92,6 +92,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             public static GUIContent zPosition = EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
             public static GUIContent ShapePath = EditorGUIUtility.TrTextContent("Shadow Path", "The shape path of the Shadow");
             public static GUIContent sortingLayerPrefixLabel = EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
+            public static GUIContent isPersistent = EditorGUIUtility.TrTextContent("Shadow Is Persistent", "Shadow will always draw, not optimized");
         }
 
         SerializedProperty m_UseRendererSilhouette;
@@ -103,6 +104,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         SerializedProperty m_UseTransformZ;
         SerializedProperty m_ZPosition;
         SerializedProperty m_ShapePath;
+        SerializedProperty m_ShadowIsPersistent;
 
 
         SortingLayerDropDown m_SortingLayerDropDown;
@@ -119,6 +121,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             m_UseTransformZ = serializedObject.FindProperty("m_UseTransformZ");
             m_SortingLayerDropDown = new SortingLayerDropDown();
             m_SortingLayerDropDown.OnEnable(serializedObject, "m_ApplyToSortingLayers");
+            m_ShadowIsPersistent = serializedObject.FindProperty("m_ShadowIsPersistent");
         }
 
         public void ShadowCaster2DSceneGUI()
@@ -158,7 +161,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 for (int i = 0; i < targets.Length; i++)
                 {
                     ShadowMeshCaster2D shadowMeshCaster = (ShadowMeshCaster2D)targets[i];
-                    if (shadowMeshCaster.hasRenderer)
+                    if (shadowMeshCaster.HasSilhouettedRenderer)
                         return true;
                 }
             }
@@ -225,6 +228,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 }
             }
 
+            EditorGUILayout.PropertyField(m_ShadowIsPersistent, Styles.isPersistent);
+            if (m_ShadowIsPersistent.boolValue)
+            {
+                EditorGUILayout.HelpBox("PERSISTENT SHADOWS ARE UNOPTIMIZED! Only use this option if you are 100% sure it is required!", MessageType.Warning);
+            }
             serializedObject.ApplyModifiedProperties();
         }
 

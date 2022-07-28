@@ -26,48 +26,35 @@ namespace UnityEditor.Experimental.Rendering.Universal
         {
         };
 
-        public enum ShadowType
-        {
-            Standing,
-            Billboard,
-            Flat
-        }
-
-
-        public ShadowType shadowType;
 
         private static class Styles
         {
 
-            public static GUIContent silhouettedRenderer =
-                EditorGUIUtility.TrTextContent("Silhouetted Renderers", "The Renderers to use for the Silhouette");
+            public static GUIContent useSilhouettedRenderer = EditorGUIUtility.TrTextContent("Use Silhouetted Renderers", "Enable or disable the Silhouetted Renderers");
 
-            public static GUIContent renderer =
-                EditorGUIUtility.TrTextContent("Renderer", "The Renderer to call upon when drawing the shadow");
+            public static GUIContent silhouettedRenderer = EditorGUIUtility.TrTextContent("Silhouetted Renderers", "The Renderers to use for the Silhouette");
 
-            public static GUIContent passes =
-                EditorGUIUtility.TrTextContent("Shader Passes", "The passes of the renderer's material that will get used to draw shadows. -1 for all passes");
+            public static GUIContent renderer = EditorGUIUtility.TrTextContent("Renderer", "The Renderer to call upon when drawing the shadow");
 
-            public static GUIContent castsShadows =
-                EditorGUIUtility.TrTextContent("Casts Shadows", "Specifies if this renderer will cast shadows");
+            public static GUIContent castsShadows = EditorGUIUtility.TrTextContent("Casts Shadows", "Specifies if this renderer will cast shadows");
 
-            public static GUIContent useTransformZ =
-                EditorGUIUtility.TrTextContent("Use TransformZ", "Use the transform's Z as the simulated Z Position of the shadow");
+            public static GUIContent useTransformZ = EditorGUIUtility.TrTextContent("Use TransformZ", "Use the transform's Z as the simulated Z Position of the shadow");
 
-            public static GUIContent zPosition =
-                EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
+            public static GUIContent zPosition = EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
 
-            public static GUIContent sortingLayerPrefixLabel =
-                EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
+            public static GUIContent sortingLayerPrefixLabel = EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
+
+            public static GUIContent isPersistent = EditorGUIUtility.TrTextContent("Shadow Is Persistent", "Shadow will always draw, not optimized");
+
         }
 
         SerializedProperty m_UseRendererSilhouette;
         SerializedProperty m_SilhouettedRenderers;
         SerializedProperty m_Renderer;
-        SerializedProperty m_Passes;
         SerializedProperty m_CastsShadows;
         SerializedProperty m_UseTransformZ;
         SerializedProperty m_ZPosition;
+        SerializedProperty m_ShadowIsPersistent;
 
 
         SortingLayerDropDown m_SortingLayerDropDown;
@@ -76,12 +63,12 @@ namespace UnityEditor.Experimental.Rendering.Universal
         public void OnEnable()
         {
             m_UseRendererSilhouette = serializedObject.FindProperty("m_UseRendererSilhouette");
-            m_SilhouettedRenderers = serializedObject.FindProperty("m_SilhouettedRenderers");
-            m_Renderer = serializedObject.FindProperty("m_targetRenderer");
-            m_Passes = serializedObject.FindProperty("m_targetPasses");
+            m_SilhouettedRenderers = serializedObject.FindProperty("m_SilhouettedRendererRefs");
+            m_Renderer = serializedObject.FindProperty("m_RenderRef");
             m_CastsShadows = serializedObject.FindProperty("m_CastsShadows");
             m_UseTransformZ = serializedObject.FindProperty("m_UseTransformZ");
             m_ZPosition = serializedObject.FindProperty("m_ZPosition");
+            m_ShadowIsPersistent = serializedObject.FindProperty("m_ShadowIsPersistent");
 
             m_SortingLayerDropDown = new SortingLayerDropDown();
             m_SortingLayerDropDown.OnEnable(serializedObject, "m_ApplyToSortingLayers");
@@ -99,7 +86,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 for (int i = 0; i < targets.Length; i++)
                 {
                     ShadowSpriteCaster2D shadowSpriteCaster = (ShadowSpriteCaster2D)targets[i];
-                    if (shadowSpriteCaster.hasRenderer)
+                    if (shadowSpriteCaster.HasSilhouettedRenderer)
                         return true;
                 }
             }
@@ -109,17 +96,17 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
         public override void OnInspectorGUI()
         {
-            ShadowSpriteCaster2D shadowSpriteCaster = serializedObject.targetObject as ShadowSpriteCaster2D;
             serializedObject.Update();
 
             EditorGUILayout.PropertyField(m_Renderer, Styles.renderer);
-            EditorGUILayout.PropertyField(m_Passes, Styles.passes);
 
+            EditorGUILayout.PropertyField(m_UseRendererSilhouette, Styles.useSilhouettedRenderer);
             EditorGUILayout.PropertyField(m_SilhouettedRenderers, Styles.silhouettedRenderer);
 
 
             EditorGUILayout.PropertyField(m_CastsShadows, Styles.castsShadows);
             EditorGUILayout.PropertyField(m_UseTransformZ, Styles.useTransformZ);
+
             if (!m_UseTransformZ.boolValue)
             {
                 EditorGUILayout.PropertyField(m_ZPosition, Styles.zPosition);
@@ -129,6 +116,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             EditorGUILayout.Space(10);
 
+            EditorGUILayout.PropertyField(m_ShadowIsPersistent, Styles.isPersistent);
+            if (m_ShadowIsPersistent.boolValue)
+            {
+                EditorGUILayout.HelpBox("PERSISTENT SHADOWS ARE UNOPTIMIZED! Only use this option if you are 100% sure it is required!", MessageType.Warning);
+            }
 
             serializedObject.ApplyModifiedProperties();
         }

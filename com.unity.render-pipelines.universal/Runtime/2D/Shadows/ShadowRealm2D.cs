@@ -25,6 +25,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private bool currentShadowTree = false;
         private bool prevShadowTree = true;
 
+
         [Space]
         [SerializeField] private float DebugOffset = 0.1f;
         [SerializeField] private bool DebugStaticShadows = false;
@@ -45,7 +46,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             if (WorldRect.width != 0 && WorldRect.height != 0)
             {
-                InitShadow2DWorld(shadowCamera,WorldRect);
+                InitShadow2DWorld(WorldRect);
             }
         }
 
@@ -59,13 +60,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public void InitShadow2DWorld(Camera shadowCamera, Bounds bounds)
         {
             Rect rect = new Rect(bounds.min, bounds.size);
-            InitShadow2DWorld(shadowCamera, rect);
+            InitShadow2DWorld(rect);
         }
 
-        public void InitShadow2DWorld(Camera shadowCamera,Rect rect)
+        public void InitShadow2DWorld(Rect rect)
         {
-            this.shadowCamera = shadowCamera;
-
             shadowTreeA = new QuadTree<ShadowCaster2D>(rect,UnitSize);
             shadowTreeB = new QuadTree<ShadowCaster2D>(rect,UnitSize);
             staticShadowTree = new QuadTree<ShadowCaster2D>(rect,UnitSize);
@@ -124,6 +123,14 @@ namespace UnityEngine.Experimental.Rendering.Universal
             currentTree?.GetNodes(ref casters,rect);
 
             casters.Sort((a, b) => Mathf.Clamp(a.GetShadowGroup() - b.GetShadowGroup(),-1,1));
+        }
+
+        private void OnValidate()
+        {
+            if (WorldRect.width != 0 && WorldRect.height != 0)
+            {
+                InitShadow2DWorld(WorldRect);
+            }
         }
 
         private void OnDrawGizmos()

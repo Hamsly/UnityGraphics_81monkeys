@@ -44,32 +44,25 @@ namespace UnityEditor.Experimental.Rendering.Universal
             public static GUIContent shadowTexture = EditorGUIUtility.TrTextContent("Shadow Texture","The reference texture the cast.");
             public static GUIContent size = EditorGUIUtility.TrTextContent("Size","The simulated size of the caster");
 
-            public static GUIContent silhouettedRenderer =
-                EditorGUIUtility.TrTextContent("Silhouetted Renderers", "The Renderers to use for the Silhouette");
+            public static GUIContent silhouettedRenderer = EditorGUIUtility.TrTextContent("Silhouetted Renderers", "The Renderers to use for the Silhouette");
 
-            public static GUIContent spriteCasterType =
-                EditorGUIUtility.TrTextContent("Sprite Caster Type", "General rules for generating the shadow mesh");
+            public static GUIContent spriteCasterType = EditorGUIUtility.TrTextContent("Sprite Caster Type", "General rules for generating the shadow mesh");
 
-            public static GUIContent reorientPerLight =
-                EditorGUIUtility.TrTextContent("Reorient Per Light", "When enabled, the mesh will rotate towards the currently rendering light");
+            public static GUIContent reorientPerLight = EditorGUIUtility.TrTextContent("Reorient Per Light", "When enabled, the mesh will rotate towards the currently rendering light");
 
-            public static GUIContent castsShadows =
-                EditorGUIUtility.TrTextContent("Casts Shadows", "Specifies if this renderer will cast shadows");
+            public static GUIContent castsShadows = EditorGUIUtility.TrTextContent("Casts Shadows", "Specifies if this renderer will cast shadows");
 
-            public static GUIContent direction =
-                EditorGUIUtility.TrTextContent("Shadow Direction", "The simulated direction of the shadow");
+            public static GUIContent direction = EditorGUIUtility.TrTextContent("Shadow Direction", "The simulated direction of the shadow");
 
-            public static GUIContent useTransformZ =
-                EditorGUIUtility.TrTextContent("Use TransformZ", "Use the transform's Z as the simulated Z Position of the shadow");
+            public static GUIContent useTransformZ = EditorGUIUtility.TrTextContent("Use TransformZ", "Use the transform's Z as the simulated Z Position of the shadow");
 
-            public static GUIContent zPosition =
-                EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
+            public static GUIContent zPosition = EditorGUIUtility.TrTextContent("Shadow ZPosition", "The simulated Z Position of the shadow");
 
-            public static GUIContent sortingLayerPrefixLabel =
-                EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
+            public static GUIContent sortingLayerPrefixLabel = EditorGUIUtility.TrTextContent("Target Sorting Layers", "Apply shadows to the specified sorting layers.");
 
-            public static GUIContent basePoint =
-                EditorGUIUtility.TrTextContent("Base Point", "The normalized y position on the texture we begin drawing from.");
+            public static GUIContent isPersistent = EditorGUIUtility.TrTextContent("Shadow Is Persistent", "Shadow will always draw, not optimized");
+
+            public static GUIContent basePoint = EditorGUIUtility.TrTextContent("Base Point", "The normalized y position on the texture we begin drawing from.");
         }
 
         SerializedProperty m_UseRendererSilhouette;
@@ -84,6 +77,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         SerializedProperty m_SpriteCasterType;
         SerializedProperty m_ReorientPerLight;
         SerializedProperty m_basePoint;
+        SerializedProperty m_ShadowIsPersistent;
 
 
         SortingLayerDropDown m_SortingLayerDropDown;
@@ -102,6 +96,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             m_SpriteCasterType = serializedObject.FindProperty("m_SpriteCasterType");
             m_ReorientPerLight = serializedObject.FindProperty("m_ReorientPerLight");
             m_basePoint = serializedObject.FindProperty("m_basePoint");
+            m_ShadowIsPersistent = serializedObject.FindProperty("m_ShadowIsPersistent");
 
             m_SortingLayerDropDown = new SortingLayerDropDown();
             m_SortingLayerDropDown.OnEnable(serializedObject, "m_ApplyToSortingLayers");
@@ -119,7 +114,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 for (int i = 0; i < targets.Length; i++)
                 {
                     ShadowSpriteCaster2D shadowSpriteCaster = (ShadowSpriteCaster2D)targets[i];
-                    if (shadowSpriteCaster.hasRenderer)
+                    if (shadowSpriteCaster.HasSilhouettedRenderer)
                         return true;
                 }
             }
@@ -155,6 +150,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             EditorGUILayout.Space(10);
 
+            EditorGUILayout.PropertyField(m_ShadowIsPersistent, Styles.isPersistent);
+            if (m_ShadowIsPersistent.boolValue)
+            {
+                EditorGUILayout.HelpBox("PERSISTENT SHADOWS ARE UNOPTIMIZED! Only use this option if you are 100% sure it is required!", MessageType.Warning);
+            }
 
             serializedObject.ApplyModifiedProperties();
         }

@@ -13,6 +13,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         private static List<ShadowCaster2D> dynamicShadows = new List<ShadowCaster2D>();
         private static List<ShadowCaster2D> staticShadows = new List<ShadowCaster2D>();
+        private static List<ShadowCaster2D> persistentShadows = new List<ShadowCaster2D>();
 
         //private static bool hasDoneInit = false;
 
@@ -105,9 +106,23 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
         }
 
+        public static void RegisterPersistentShadow(ShadowCaster2D shadowCaster)
+        {
+            if (!persistentShadows.Contains(shadowCaster))
+            {
+                persistentShadows.Add(shadowCaster);
+            }
+        }
+
         public static void UnregisterDynamicShadow(ShadowCaster2D shadowCaster)
         {
             dynamicShadows.Remove(shadowCaster);
+        }
+
+        public static void UnregisterPersistentShadow(ShadowCaster2D shadowCaster)
+        {
+            persistentShadows.Remove(shadowCaster);
+
         }
 
         public static List<ShadowCaster2D> GetDynamicShadows()
@@ -125,6 +140,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if(shadowCasterGroups == null) return;
 
             ShadowCastersCulled.Clear();
+            ShadowCastersCulled.AddRange(persistentShadows);
 
             if (ShadowRealm2D.Instance != null)
             {

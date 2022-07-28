@@ -138,11 +138,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
             mesh.triangles = triangles;
         }
 
-        protected new void OnDisable()
-        {
-            base.OnDisable();
-            ShadowCasterGroup2DManager.RemoveFromShadowCasterGroup(this, m_ShadowCasterGroup);
-        }
 
         public new void Update()
         {
@@ -184,7 +179,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material,int groupIndex)
         {
-            if (!castsShadows || material == null || !IsShadowedLayer(layerToRender)) return;
+            if (!CastsShadows || material == null || !IsShadowedLayer(layerToRender)) return;
             cmdBuffer.SetGlobalVector(k_ShadowCenterID, shadowPosition);
             cmdBuffer.SetGlobalTexture(k_ShadowTexture, texture);
 

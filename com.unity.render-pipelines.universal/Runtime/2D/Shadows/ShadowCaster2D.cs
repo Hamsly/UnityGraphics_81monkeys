@@ -15,7 +15,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
     public class ShadowCaster2D : ShadowCasterGroup2D , IQuadTreeNode
     {
         [SerializeField] protected Renderer[] m_SilhouettedRenderers;
-        [SerializeField] protected bool m_HasRenderer = false;
         [SerializeField] protected bool m_UseRendererSilhouette = true;
         [SerializeField] private bool m_UseTransformZ = true;
         [SerializeField] private float m_ZPosition = 0f;
@@ -23,6 +22,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] bool m_CastsShadows = true;
         [SerializeField] int[] m_ApplyToSortingLayers = null;
         [SerializeField] Renderer2DData.ShadowMaterialTypes m_materialType = Renderer2DData.ShadowMaterialTypes.MeshShadows;
+
+        public bool m_ShadowIsPersistent = false;
 
         private int tick;
         private static int startTick = 0;
@@ -69,27 +70,21 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public bool useRendererSilhouette
         {
             set { m_UseRendererSilhouette = value; }
-            get { return m_UseRendererSilhouette && m_HasRenderer; }
+            get { return m_UseRendererSilhouette && HasSilhouettedRenderer; }
         }
 
         /// <summary>
         /// Specifies if shadows will be cast.
         /// </summary>
-        public bool castsShadows
+        public bool CastsShadows
         {
             set { m_CastsShadows = value; }
             get { return m_CastsShadows; }
         }
 
-        public bool hasRenderer
-        {
-            get => m_HasRenderer;
-        }
+        public virtual bool HasSilhouettedRenderer => (m_SilhouettedRenderers?.Length ?? 0) > 0;
 
-        public Renderer[] silhouettedRenderer
-        {
-            get => m_SilhouettedRenderers;
-        }
+        public Renderer[] SilhouettedRenderer => m_SilhouettedRenderers;
 
         public void AddSilhouettedRenderer(Renderer renderer)
         {
@@ -161,25 +156,40 @@ namespace UnityEngine.Experimental.Rendering.Universal
             m_ShadowCasterGroup = null;
 
             isStatic = gameObject.isStatic;
+
+
         }
 
         protected void Start()
         {
-            if (!isStatic)
+            if (!m_ShadowIsPersistent)
             {
-                ShadowCasterGroup2DManager.RegisterDynamicShadow(this);
+                if (!isStatic)
+                {
+                    ShadowCasterGroup2DManager.RegisterDynamicShadow(this);
+                }
+                else
+                {
+                    ShadowCasterGroup2DManager.RegisterStaticShadow(this);
+                }
             }
             else
             {
-                ShadowCasterGroup2DManager.RegisterStaticShadow(this);
+                ShadowCasterGroup2DManager.RegisterPersistentShadow(this);
             }
         }
 
-        protected void OnDisable()
+
+        protected void OnDestroy()
         {
             if (!gameObject.isStatic)
             {
                 ShadowCasterGroup2DManager.UnregisterDynamicShadow(this);
+            }
+
+            if (m_ShadowIsPersistent)
+            {
+                ShadowCasterGroup2DManager.UnregisterPersistentShadow(this);
             }
         }
 
@@ -214,8 +224,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             OnUpdate();
 
-            m_HasRenderer = (m_SilhouettedRenderers?.Length ?? 0) > 0;
-
             m_PreviousShadowCasterGroup = m_ShadowCasterGroup;
             bool addedToNewGroup = ShadowCasterGroup2DManager.AddToShadowCasterGroup(this, ref m_ShadowCasterGroup);
             if (addedToNewGroup && m_ShadowCasterGroup != null)
@@ -247,11 +255,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
         }
 
-        public virtual void ExcludeSilhouettes(CommandBuffer cmdBuffer,int layerToRender,Material material)
+        public virtual void ExcludeSilhouettes(CommandBuffer cmdBuffer,int layerToRender,Material material,int groupIndex)
         {
             if (useRendererSilhouette && IsShadowedLayer(layerToRender))
             {
-                var renderers = silhouettedRenderer;
+                var renderers = SilhouettedRenderer;
                 if (renderers != null)
                 {
                     foreach (var currentRenderer in renderers)

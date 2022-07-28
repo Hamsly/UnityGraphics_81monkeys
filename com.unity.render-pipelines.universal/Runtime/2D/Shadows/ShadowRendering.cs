@@ -172,7 +172,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                             var removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
                             foreach (var silhouette in silhouettes)
                             {
-                                silhouette.ExcludeSilhouettes(cmdBuffer,layerToRender,removeSelfShadowMaterial);
+                                silhouette.ExcludeSilhouettes(cmdBuffer,layerToRender,removeSelfShadowMaterial,incrementingGroupIndex);
                             }
 
                             silhouettes.Clear();
@@ -200,7 +200,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 var mat = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
                 foreach (var silhouette in silhouettes)
                 {
-                    silhouette.ExcludeSilhouettes(cmdBuffer,layerToRender,mat);
+                    silhouette.ExcludeSilhouettes(cmdBuffer,layerToRender,mat,incrementingGroupIndex);
                 }
             }
 
