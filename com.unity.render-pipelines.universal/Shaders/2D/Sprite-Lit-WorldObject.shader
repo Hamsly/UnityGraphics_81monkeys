@@ -34,7 +34,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
         Blend SrcAlpha OneMinusSrcAlpha
         Cull Off
-        ZWrite Off
+        ZWrite On
 
         Pass
         {
