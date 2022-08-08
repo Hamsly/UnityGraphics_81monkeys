@@ -144,7 +144,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
                 float4 col = CombinedShapeLightShared(main, mask, i.lightingUV + offset);
                 o.color = float4(lerp(col.rgb,_OverlayColor.rgb,_OverlayColor.a),col.a);
-                o.depth = i.positionCS.z - offset.y;
+                o.depth = i.positionCS.z - (i.positionWS.w * i.scale.y) - offset.y;
 
                 return o;
             }
