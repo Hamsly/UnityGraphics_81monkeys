@@ -137,19 +137,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             if (DebugStaticShadows)
             {
-                staticShadowTree.DrawGizmo(DebugOffset);
+                staticShadowTree?.DrawGizmo(DebugOffset);
             }
 
             if (DebugDynamicShadows)
             {
                 QuadTree<ShadowCaster2D> workingTree = !currentShadowTree ? shadowTreeA : shadowTreeB;
-                workingTree.DrawGizmo(DebugOffset);
+                workingTree?.DrawGizmo(DebugOffset);
             }
 
             if (DebugDynamicBuildingShadows)
             {
                 QuadTree<ShadowCaster2D> workingTree = currentShadowTree ? shadowTreeA : shadowTreeB;
-                workingTree.DrawGizmo(DebugOffset);
+                workingTree?.DrawGizmo(DebugOffset);
             }
 
         }

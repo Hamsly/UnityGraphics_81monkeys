@@ -781,6 +781,12 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 }
                 else
                 {
+                    if (lightObject.transform.position.z <= 0)
+                    {
+                        EditorGUILayout.HelpBox("2D Lights do not always work as expected when below 0 on the Z axis",MessageType.Warning);
+                    }
+
+
                     if (m_LightType.intValue != (int)Light2D.DeprecatedLightType.Parametric)
                         meshChanged = DrawLightCommon();
 

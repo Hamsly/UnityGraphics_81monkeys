@@ -66,6 +66,12 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
+            struct fragOutput
+            {
+                float4 color : SV_Target;
+                float  depth : SV_Depth;
+            };
+
             #include "Packages/com.unity.render-pipelines.universal/Shaders/2D/Include/LightingUtility.hlsl"
 
             TEXTURE2D(_MainTex);
@@ -105,6 +111,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
+
                 a.positionOS.y += -TransformObjectToWorld(a.positionOS).z;
                 a.positionOS.z = -a.positionOS.y;
 
@@ -123,8 +130,9 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/2D/Include/CombinedShapeLightShared.hlsl"
 
-            float4 CombinedShapeLightFragment(Varyings i) : SV_Target
+            fragOutput CombinedShapeLightFragment(Varyings i)
             {
+                fragOutput o;
                 const float4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 const half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
 
@@ -135,7 +143,10 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 const float2 offset = float2(decodedOffset.x * (i.scale.x),decodedOffset.y * (i.scale.y));
 
                 float4 col = CombinedShapeLightShared(main, mask, i.lightingUV + offset);
-                return float4(lerp(col.rgb,_OverlayColor.rgb,_OverlayColor.a),col.a);
+                o.color = float4(lerp(col.rgb,_OverlayColor.rgb,_OverlayColor.a),col.a);
+                o.depth = i.positionCS.z - offset.y;
+
+                return o;
             }
             ENDHLSL
         }

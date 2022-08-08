@@ -31,7 +31,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
 
         Blend SrcAlpha OneMinusSrcAlpha
         Cull Off
-        ZWrite Off
+        ZWrite On
 
         Pass
         {
@@ -61,6 +61,12 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
                 float2  scale       : TEXCOORD2;
                 float3  positionWS  : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            struct fragOutput
+            {
+                float4 color : SV_Target;
+                float  depth : SV_Depth;
             };
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/2D/Include/LightingUtility.hlsl"
@@ -101,6 +107,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
+                v.positionOS.y += -TransformObjectToWorld(v.positionOS).z;
                 o.positionWS = TransformObjectToWorld(v.positionOS);
 
                 o.positionCS = TransformObjectToHClip(v.positionOS);
@@ -116,8 +123,10 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/2D/Include/CombinedShapeLightShared.hlsl"
 
-            float4 CombinedShapeLightFragment(Varyings i) : SV_Target
+            fragOutput CombinedShapeLightFragment(Varyings i)
             {
+                fragOutput o;
+
                 const float4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 const half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
 
@@ -128,7 +137,9 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
                 decodedOffset.y += _ObjectOffset.y - (i.positionWS.z * PIXELS_PER_UNIT);
                 const float2 offset = float2(decodedOffset.x * (i.scale.x),decodedOffset.y * (i.scale.y));
 
-                return CombinedShapeLightShared(main, mask, i.lightingUV + offset);
+                o.color = CombinedShapeLightShared(main, mask, i.lightingUV + offset);
+                o.depth = i.positionCS.z - offset.y;
+                return o;
             }
             ENDHLSL
         }
