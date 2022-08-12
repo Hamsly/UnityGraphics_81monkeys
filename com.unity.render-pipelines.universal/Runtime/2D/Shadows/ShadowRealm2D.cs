@@ -53,7 +53,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public ShadowRealm2D()
         {
             HasDoneInit = false;
-
             Instance = this;
         }
 
@@ -65,9 +64,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public void InitShadow2DWorld(Rect rect)
         {
-            shadowTreeA = new QuadTree<ShadowCaster2D>(rect,UnitSize);
-            shadowTreeB = new QuadTree<ShadowCaster2D>(rect,UnitSize);
-            staticShadowTree = new QuadTree<ShadowCaster2D>(rect,UnitSize);
+            shadowTreeA ??= new QuadTree<ShadowCaster2D>(rect,UnitSize);
+            shadowTreeB ??= new QuadTree<ShadowCaster2D>(rect,UnitSize);
+            staticShadowTree ??= new QuadTree<ShadowCaster2D>(rect,UnitSize);
 
             HasDoneInit = true;
 
