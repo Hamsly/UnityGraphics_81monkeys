@@ -113,8 +113,6 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
 
                 a.positionOS.y += -TransformObjectToWorld(a.positionOS).z;
-                a.positionOS.z = -a.positionOS.y;
-
                 o.positionWS = float4(TransformObjectToWorld(a.positionOS),-a.positionOS.y);
 
                 o.positionCS = TransformObjectToHClip(a.positionOS);
@@ -139,7 +137,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
                 float2 decodedOffset = DecodeOffset(SAMPLE_TEXTURE2D(_OffsetMap,sampler_OffsetMap, i.uv));
 
                 decodedOffset.x += _ObjectOffset.x;
-                decodedOffset.y += _ObjectOffset.y - ((i.positionWS.z - i.positionWS.w) * PIXELS_PER_UNIT);
+                decodedOffset.y += _ObjectOffset.y - (i.positionWS.z * PIXELS_PER_UNIT);
                 const float2 offset = float2(decodedOffset.x * (i.scale.x),decodedOffset.y * (i.scale.y));
 
                 float4 col = CombinedShapeLightShared(main, mask, i.lightingUV + offset);

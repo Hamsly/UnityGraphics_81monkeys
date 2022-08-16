@@ -20,7 +20,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] private float m_ZPosition = 0f;
         [SerializeField] protected int m_InstanceId;
         [SerializeField] bool m_CastsShadows = true;
-        [SerializeField] int[] m_ApplyToSortingLayers = null;
+        [SerializeField] public int[] m_ApplyToSortingLayers = null;
         [SerializeField] Renderer2DData.ShadowMaterialTypes m_materialType = Renderer2DData.ShadowMaterialTypes.MeshShadows;
 
         public bool m_ShadowIsPersistent = false;
@@ -117,15 +117,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         static int[] SetDefaultSortingLayers()
         {
-            int layerCount = SortingLayer.layers.Length;
-            int[] allLayers = new int[layerCount];
-
-            for (int layerIndex = 0; layerIndex < layerCount; layerIndex++)
-            {
-                allLayers[layerIndex] = SortingLayer.layers[layerIndex].id;
-            }
-
-            return allLayers;
+            return new int[0];
         }
 
         protected new void Awake()

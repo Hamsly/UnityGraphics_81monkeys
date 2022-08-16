@@ -17,6 +17,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private Tilemap tileMap;
         private TilemapRenderer tilemapRenderer;
 
+        [SerializeField,HideInInspector] private int[] LayerMask = new int[0];
+
         [SerializeField] private ShadowTileLayer[] shadowTileLayers = {
             new ShadowTileLayer
             {
@@ -158,6 +160,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                 caster.ShadowHeight = currentLayer.shadowHeight;
                 caster.ZPosition = currentLayer.shadowZPosition;
+                caster.m_ApplyToSortingLayers = LayerMask;
             }
         }
     }

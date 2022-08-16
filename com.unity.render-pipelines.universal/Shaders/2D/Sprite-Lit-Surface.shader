@@ -24,14 +24,14 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
     SubShader
     {
         Tags {
-            "Queue" = "Transparent"
+            "Queue" = "Transparent+1"
             "RenderType" = "Transparent"
             "RenderPipeline" = "UniversalPipeline"
         }
 
         Blend SrcAlpha OneMinusSrcAlpha
         Cull Off
-        ZWrite On
+        ZWrite Off
 
         Pass
         {
