@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -17,6 +18,18 @@ namespace UnityEditor.Experimental.Rendering.Universal
         [EditorTool("Edit Shadow Caster Shape", typeof(ShadowTile2D))]
         class ShadowCaster2DShadowCasterShapeTool : ShadowTile2DShapeTool {};
 
+        SerializedProperty m_tileLayerID;
+
+        private static class Styles
+        {
+            public static GUIContent tileLayerID = EditorGUIUtility.TrTextContent("Tile Layer ID","Tells the Shadow Tile Controller what layer properties to use for this tile");
+        }
+
+
+        private void OnEnable()
+        {
+            m_tileLayerID = serializedObject.FindProperty("layerID");
+        }
 
         public void ShadowCaster2DSceneGUI()
         {
@@ -50,7 +63,11 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
         public override void OnInspectorGUI()
         {
-           ShadowCaster2DInspectorGUI<ShadowCaster2DShadowCasterShapeTool>();
+            serializedObject.Update();
+
+            EditorGUILayout.PropertyField(m_tileLayerID, Styles.tileLayerID);
+
+            ShadowCaster2DInspectorGUI<ShadowCaster2DShadowCasterShapeTool>();
 
             serializedObject.ApplyModifiedProperties();
         }
