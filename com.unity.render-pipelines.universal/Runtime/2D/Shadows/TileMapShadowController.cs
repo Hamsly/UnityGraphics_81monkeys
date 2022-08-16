@@ -88,7 +88,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     continue;
                 }
 
-                if (child.TryGetComponent(out ShadowTile2D shadowCaster))
+                ShadowTile2D[] shadowTileCasters = child.GetComponents<ShadowTile2D>();
+
+                foreach (var shadowCaster in shadowTileCasters)
                 {
                     if (shadowCaster.LayerID != currentLayer.layerID) continue;
 
