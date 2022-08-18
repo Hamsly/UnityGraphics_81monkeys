@@ -105,6 +105,8 @@ Shader "Hidden/ShadowMeshGroup2D"
 
             float4 frag (Varyings i) : SV_Target
             {
+                clip(i.color.r - 1);
+
                 float4 main = tex2D(_MainTex, i.uv);
                 float4 col = i.color;
                 col.g = main.a * col.g;

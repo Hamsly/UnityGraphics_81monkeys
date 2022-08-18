@@ -180,6 +180,8 @@ Shader "Hidden/ShadowSpriteGroup2D"
 
             float4 frag (Varyings i) : SV_Target
             {
+                clip(i.color.r - 1);
+
                 float4 main = tex2D(_MainTex, i.uv);
                 float4 col = i.color;
                 const float aa = tex2D(_ShadowTexture,i.uv_tex.xy / i.uv_tex.z).a;
