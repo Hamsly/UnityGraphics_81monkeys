@@ -78,6 +78,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (prevShadowTree != currentShadowTree)
             {
                 prevShadowTree = currentShadowTree;
+
                 StartCoroutine(GetDynamicShadows(IterationsPerFrame));
             }
         }
@@ -100,15 +101,21 @@ namespace UnityEngine.Experimental.Rendering.Universal
             int iteration = 0;
 
             List<ShadowCaster2D> casters = ShadowCasterGroup2DManager.GetDynamicShadows();
-            foreach (var caster in casters)
+            var count = casters.Count;
+            for (int i = 0; i < count; i++)
             {
+                var caster = casters[i];
+
+                workingTree.Insert(caster);
+
                 if (iteration++ > maxIterations)
                 {
                     iteration = 0;
                     yield return null;
-                }
 
-                workingTree.Insert(caster);
+                    i -= Mathf.Max(0, count - casters.Count);
+                    count = casters.Count;
+                }
             }
 
             currentShadowTree = !currentShadowTree;
