@@ -34,6 +34,8 @@ namespace UnityEditor.Experimental.Rendering.Universal
         internal static readonly Texture ToolIconRect = Icon("SOTE_ToolIconRect");
         internal static readonly Texture ToolIconRemap = Icon("SOTE_ToolIconRemap");
         internal static readonly Texture ToolIconNoise = Icon("SOTE_ToolNoise");
+        internal static readonly Texture ToolIconInspect = Icon("SOTE_ToolInspect");
+
         internal static readonly Texture ToolIconUndo = Icon("SOTE_Undo");
 
         internal static Texture Icon(string name)
@@ -51,6 +53,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         private Vector2Int _cursorSize = Vector2Int.one;
         private Vector2Int _imageCursorPos;
         private Vector2Int _imageCursorPosStart;
+        private Vector2Int _inspectedOffset;
         private Vector2 _viewSize;
         private Rect _groupRect;
         [SerializeField] private Sprite _sourceSprite = null;
@@ -79,6 +82,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
         [SerializeField] private float previewAlpha = 0.5f;
         private Material _previewMaterial;
         private float _previewContrast = 0;
+        private int _previewCutAway = 0;
+        private int _previewCutAwayHeight = 0;
+        private bool _previewCutAwayActive = false;
 
         [SerializeField] private Vector2Int brushOffset = Vector2Int.zero;
 
@@ -391,7 +397,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 }
             }
 
-            if (state == ButtonState.Up)
+            if (state == ButtonState.Up && selectedTool != 5)
             {
                 //if(selectedTool != 0) _mouseIsHeld = false;
                 return;
@@ -417,6 +423,10 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
                 case 4:
                     NoiseTool(e.button, state);
+                    break;
+
+                case 5:
+                    InspectTool(e.button,state);
                     break;
             }
         }
@@ -657,6 +667,16 @@ namespace UnityEditor.Experimental.Rendering.Universal
                     break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Inspects a given pixel
+        /// </summary>
+        /// <param name="button"></param>
+        /// <param name="buttonState"></param>
+        private void InspectTool(int button, ButtonState buttonState)
+        {
+            _inspectedOffset = ColorToOffset(_workingTexture.GetPixel(_imageCursorPos.x,_workingTexture.height - (_imageCursorPos.y + 1)));
         }
 
         /// <summary>
@@ -975,6 +995,16 @@ namespace UnityEditor.Experimental.Rendering.Universal
                     GUILayout.FlexibleSpace();
                     EditorGUILayout.EndVertical();
                     break;
+
+                case 5:
+                    EditorGUILayout.BeginVertical();
+                    GUILayout.FlexibleSpace();
+
+                    EditorGUILayout.LabelField($"Offset: {_inspectedOffset.x} , {_inspectedOffset.y}");
+
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.EndVertical();
+                    break;
             }
 
 
@@ -1203,7 +1233,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             previewMaterial.color = new Color(1, 1, 1, previewAlpha);
             EditorGUI.DrawPreviewTexture(new Rect(xx, yy, _previewTexture.width, _previewTexture.height),_previewTexture,previewMaterial);
 
-            if (selectedTool != 3)
+            if (selectedTool != 3 && selectedTool != 4 && selectedTool != 5)
             {
                 float aa1 = 0.75f;
                 float aa2 = 0.2f;
@@ -1259,13 +1289,14 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 maxY = Mathf.Max(p1.y, p2.y);
             }
 
-            if (_mouseIsHeld && selectedTool != 0)
+            if (_mouseIsHeld && (selectedTool != 0 && selectedTool != 5))
             {
                 minX = Mathf.Min(p1.x, p2.x);
                 minY = Mathf.Min(p1.y, p2.y);
                 maxX = Mathf.Max(p1.x, p2.x) + 1;
                 maxY = Mathf.Max(p1.y, p2.y) + 1;
             }
+
 
             const float cursorAlpha = 0.25f;
             switch (selectedTool)
@@ -1339,6 +1370,10 @@ namespace UnityEditor.Experimental.Rendering.Universal
                         }
                     }
                     break;
+
+                case 5:
+                    EditorGUI.DrawRect(new Rect(_cursorPos.x,_cursorPos.y,_cursorSize.x,_cursorSize.y),new Color(1,1,1,cursorAlpha));
+                    break;
             }
 
 
@@ -1347,9 +1382,18 @@ namespace UnityEditor.Experimental.Rendering.Universal
             DrawCursorCorner(minX, maxY, Shadow2DOffsetMapEditorContent.CursorIconBL);
             DrawCursorCorner(maxX, maxY, Shadow2DOffsetMapEditorContent.CursorIconBR);
 
+            var offset = brushTargetOffset;
+
+            if(selectedTool == 5)
+            {
+                offset = _inspectedOffset;
+            }
+
+            offset.x = -offset.x;
+
             if (selectedTool != 3)
             {
-                var targetPoint = _cursorPos + brushTargetOffset + new Vector2(0.5f, 0.5f);
+                var targetPoint = _cursorPos + offset + new Vector2(0.5f, 0.5f);
 
                 GUI.DrawTexture(new Rect(targetPoint.x - 1f, targetPoint.y - 1f, 2, 2),
                     Shadow2DOffsetMapEditorContent.CursorIconTarget, ScaleMode.ScaleToFit, true);
@@ -1526,7 +1570,8 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconRect, "Rectangle tool"),
                 new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconRemap, "Remap tool"),
                 new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconNoise, "Noise tool"),
-            }, 5);
+                new GUIContent(Shadow2DOffsetMapEditorContent.ToolIconInspect, "Inspector tool"),
+            }, 6);
 
             EditorGUILayout.Space(20);
 
