@@ -42,11 +42,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 //return new Rect(MBounds.x + p.x,MBounds.y + p.y,MBounds.width,MBounds.height);
                 return new Rect(p.x, p.y,0,0);
             }
-
-            set
-            {
-                m_Bounds = value;
-            }
         }
 
         public float ZPosition
