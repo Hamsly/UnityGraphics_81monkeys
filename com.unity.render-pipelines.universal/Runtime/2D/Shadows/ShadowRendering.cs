@@ -147,7 +147,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var lightPosition = light.transform.position;
             cmdBuffer.SetGlobalVector(k_LightPosID, lightPosition);
 
-            //var lightRange = Mathf.Max(light.pointLightOuterRadius * 2,4);
+            var lightRange = Mathf.Max(light.pointLightOuterRadius * 2,4);
 
             var incrementingGroupIndex = 0;
             var previousShadowGroupIndex = -1;
@@ -161,6 +161,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 foreach (var shadowCaster in shadowCasters)
                 {
                     if (shadowCaster == null) continue;
+
+                    var position = shadowCaster.transform.position;
+                    var xDiff = position.x - lightPosition.x;
+                    var yDiff = position.y - lightPosition.y;
+                    if(xDiff > lightRange || xDiff < -lightRange ||
+                       yDiff > lightRange || yDiff < -lightRange)
+                        continue;
 
                     //if(!lightRect.Overlaps(shadowCaster.Bounds))  continue;
 
@@ -180,16 +187,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                         incrementingGroupIndex++;
                     }
-
-                    /*
-                    var position = shadowCaster.transform.position;
-                    var xDiff = position.x - lightPosition.x;
-                    var yDiff = position.y - lightPosition.y;
-                    if(xDiff > lightRange || xDiff < -lightRange ||
-                       yDiff > lightRange || yDiff < -lightRange)
-                        continue;
-                    */
-
+                    
                     var shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
                     shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial,incrementingGroupIndex);
 
