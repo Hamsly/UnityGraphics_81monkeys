@@ -1,4 +1,4 @@
-Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
+Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth-Transparent"
 {
     Properties
     {
@@ -6,10 +6,12 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
         _MaskTex("Mask", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}
         _OffsetMap("Offset Map", 2D) = "black" {}
+        _OverlayColor("Overlay", Color) = (1,1,1,0)
         [PerRendererData] _ObjectOffset("Object Offset", Vector) = (0,0,0,0)
 
         // Legacy properties. They're here so that materials using this shader can gracefully fallback to the legacy sprite shader.
         [HideInInspector] _Color("Tint", Color) = (1,1,1,1)
+
         [HideInInspector] _RendererColor("RendererColor", Color) = (1,1,1,1)
         [HideInInspector] _Flip("Flip", Vector) = (1,1,1,1)
         [HideInInspector] _AlphaTex("External Alpha", 2D) = "white" {}
@@ -48,7 +50,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
             {
                 float3 positionOS   : POSITION;
                 float4 color        : COLOR;
-                float2  uv          : TEXCOORD0;
+                float2 uv           : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -81,6 +83,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
 
             half4 _MainTex_ST;
             float4 _ObjectOffset;
+            float4 _OverlayColor;
 
             #if USE_SHAPE_LIGHT_TYPE_0
             SHAPE_LIGHT(0)
@@ -98,7 +101,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
             SHAPE_LIGHT(3)
             #endif
 
-            Varyings CombinedShapeLightVertex(Attributes v)
+            Varyings CombinedShapeLightVertex(Attributes a)
             {
                 const int pixelsPerUnit = 32;
 
@@ -107,17 +110,18 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                v.positionOS.y += -TransformObjectToWorld(v.positionOS).z;
-                o.positionWS = TransformObjectToWorld(v.positionOS);
 
-                o.positionCS = TransformObjectToHClip(v.positionOS);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                a.positionOS.y += -TransformObjectToWorld(a.positionOS).z;
+                o.positionWS = float4(TransformObjectToWorld(a.positionOS),-a.positionOS.y);
+
+                o.positionCS = TransformObjectToHClip(a.positionOS);
+                o.uv = TRANSFORM_TEX(a.uv, _MainTex);
 
                 o.lightingUV = float2(ComputeScreenPos(o.positionCS).xy);
 
-                o.scale = GetScale(v.positionOS,o.lightingUV);
+                o.scale = GetScale(a.positionOS,o.lightingUV);
 
-                o.color = v.color;
+                o.color = a.color;
                 return o;
             }
 
@@ -126,10 +130,8 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
             fragOutput CombinedShapeLightFragment(Varyings i)
             {
                 fragOutput o;
-
                 const float4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 const half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
-
 
                 float2 decodedOffset = DecodeOffset(SAMPLE_TEXTURE2D(_OffsetMap,sampler_OffsetMap, i.uv));
 
@@ -137,8 +139,10 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Surface"
                 decodedOffset.y += _ObjectOffset.y - (i.positionWS.z * PIXELS_PER_UNIT);
                 const float2 offset = float2(decodedOffset.x * (i.scale.x),decodedOffset.y * (i.scale.y));
 
-                o.color = CombinedShapeLightShared(main, mask, i.lightingUV + offset);
-                o.depth = i.positionCS.z - offset.y;
+                float4 col = CombinedShapeLightShared(main, mask, i.lightingUV + offset);
+                o.color = float4(lerp(col.rgb,_OverlayColor.rgb,_OverlayColor.a),col.a);
+                o.depth = -offset.y;
+
                 return o;
             }
             ENDHLSL

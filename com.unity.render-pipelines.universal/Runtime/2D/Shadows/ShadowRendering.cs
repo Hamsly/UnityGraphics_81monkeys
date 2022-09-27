@@ -143,8 +143,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
             cmdBuffer.SetRenderTarget(renderTexture, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmdBuffer.ClearRenderTarget(true, true, Color.black);  // clear stencil
 
-
-            var lightPosition = light.transform.position;
+            var p = light.transform.position;
+            var lightPosition = new Vector4(p.x,p.y,-p.z,0);
             cmdBuffer.SetGlobalVector(k_LightPosID, lightPosition);
 
             var lightRange = Mathf.Max(light.pointLightOuterRadius * 2,4);
@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                         incrementingGroupIndex++;
                     }
-                    
+
                     var shadowMaterial = pass.rendererData.GetShadowMaterial(shadowCaster.materialType,incrementingGroupIndex);
                     shadowCaster.CastShadows(cmdBuffer,layerToRender,light,shadowMaterial,incrementingGroupIndex);
 

@@ -533,6 +533,8 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             m_SortingLayerDropDown.OnTargetSortingLayers(serializedObject, targets, Styles.generalSortingLayerPrefixLabel, AnalyticsTrackChanges);
 
+
+
             DrawFoldouts();
         }
 
@@ -781,9 +783,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
                 }
                 else
                 {
-                    if (lightObject.transform.position.z <= 0)
+                    if (lightObject.transform.position.z >= 0)
                     {
-                        EditorGUILayout.HelpBox("2D Lights do not always work as expected when below 0 on the Z axis",MessageType.Warning);
+                        EditorGUILayout.HelpBox("2D Lights do not always work as expected when above 0 on the Z axis",MessageType.Warning);
                     }
 
 

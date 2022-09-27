@@ -1,4 +1,4 @@
-Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
+Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth"
 {
     Properties
     {
@@ -8,7 +8,6 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
         _OffsetMap("Offset Map", 2D) = "black" {}
         _OverlayColor("Overlay", Color) = (1,1,1,0)
         [PerRendererData] _ObjectOffset("Object Offset", Vector) = (0,0,0,0)
-
 
         // Legacy properties. They're here so that materials using this shader can gracefully fallback to the legacy sprite shader.
         [HideInInspector] _Color("Tint", Color) = (1,1,1,1)
@@ -142,7 +141,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Object"
 
                 float4 col = CombinedShapeLightShared(main, mask, i.lightingUV + offset);
                 o.color = float4(lerp(col.rgb,_OverlayColor.rgb,_OverlayColor.a),col.a);
-                o.depth = i.positionCS.z - offset.y;
+                o.depth = -offset.y;
 
                 return o;
             }

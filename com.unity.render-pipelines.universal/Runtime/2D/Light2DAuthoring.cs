@@ -19,12 +19,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             Gizmos.color = Color.blue;
 
-            Vector3 iconPos = transform.position + new Vector3(0, transform.position.z, 0);
+            var p = transform.position;
+            p.z = -p.z;
+
+            Vector3 iconPos = p + new Vector3(0, p.z, 0);
 
             Gizmos.color = m_Color;
 
-            Vector3 cubeSize = new Vector3(0.1f, transform.position.z, 0);
-            Gizmos.DrawWireCube(Vector3.Lerp(transform.position, iconPos, 0.5f), cubeSize);
+            Vector3 cubeSize = new Vector3(0.1f, Mathf.Abs(p.z), 0);
+            Gizmos.DrawWireCube(Vector3.Lerp(p, iconPos, 0.5f), cubeSize);
 
             Gizmos.DrawIcon(iconPos, s_IconsPath + s_LightIconFileNames[(int)m_LightType], true, Gizmos.color);
         }
