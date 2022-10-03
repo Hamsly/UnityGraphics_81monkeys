@@ -118,10 +118,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public static void RenderShadows(IRenderPass2D pass, RenderingData renderingData, CommandBuffer cmdBuffer, int layerToRender, Light2D light, float shadowIntensity, RenderTargetIdentifier renderTexture)
         {
-
-
-
-             // Blur Set up
+            // Blur Set up
              /*
 
             RenderTargetIdentifier workingTexture = new RenderTargetIdentifier();
@@ -161,6 +158,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 foreach (var shadowCaster in shadowCasters)
                 {
                     if (shadowCaster == null) continue;
+                    if (!shadowCaster.isActiveAndEnabled) continue;
 
                     var position = shadowCaster.transform.position;
                     var xDiff = position.x - lightPosition.x;
