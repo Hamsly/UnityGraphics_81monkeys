@@ -73,11 +73,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     continue;
 
 #if UNITY_EDITOR
-                if (!UnityEditor.SceneManagement.StageUtility.IsGameObjectRenderedByCamera(light.gameObject, camera))
+                if (!UnityEditor.SceneManagement.StageUtility.IsGameObjectRenderedByCamera(light.gameObject, camera) && !light.lightIsPersistent)
                     continue;
 #endif
 
-                if (light.lightType == Light2D.LightType.Global)
+                if (light.lightType == Light2D.LightType.Global || light.lightIsPersistent)
                 {
                     m_VisibleLights.Add(light);
                     continue;

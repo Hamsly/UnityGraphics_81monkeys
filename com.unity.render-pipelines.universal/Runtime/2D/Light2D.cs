@@ -91,6 +91,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [FormerlySerializedAs("m_PointLightDistance")]
         [SerializeField] float m_NormalMapDistance = 3.0f;
 
+#if UNITY_EDITOR
+        [SerializeField, HideInInspector] private int lightVersion = 0;
+#endif
+
+        public bool lightIsPersistent = false;
+        private Vector3 PersistentPosition = Vector3.zero;
+
 #if USING_ANIMATION_MODULE
         [UnityEngine.Animations.NotKeyable]
 #endif
@@ -128,6 +135,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField]
         Bounds m_LocalBounds;
         internal BoundingSphere boundingSphere { get; private set; }
+
+        public Vector3 Position
+        {
+            get
+            {
+                return lightIsPersistent ? PersistentPosition : transform.position;
+            }
+        }
+
 
         internal Mesh lightMesh
         {
@@ -234,6 +250,18 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             return largestIndex;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (lightVersion == 0)
+            {
+                lightVersion = 1;
+                var p = transform.localPosition;
+                transform.localPosition = new Vector3(p.x, p.y, -p.z);
+            }
+        }
+#endif
 
         internal void UpdateMesh(bool forceUpdate)
         {

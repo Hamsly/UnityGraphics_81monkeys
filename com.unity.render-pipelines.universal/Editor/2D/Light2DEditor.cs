@@ -79,6 +79,8 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             public static GUIContent generalLightType = EditorGUIUtility.TrTextContent("Light Type", "Select the light type. \n\nGlobal Light: For ambient light. \nSpot Light: For a spot light / point light. \nFreeform Light: For a custom shape light. \nSprite Light: For a custom light cookie using Sprites.");
 
+            public static GUIContent lightIsPersistent = EditorGUIUtility.TrTextContent("Persistent", "When true the light ignores camera space culling");
+
             public static GUIContent generalFalloffSize = EditorGUIUtility.TrTextContent("Falloff", "Adjusts the falloff area of this light. The higher the falloff value, the larger area the falloff spans.");
             public static GUIContent generalFalloffIntensity = EditorGUIUtility.TrTextContent("Falloff Strength", "Adjusts the falloff curve to control the softness of this light’s edges. The higher the falloff strength, the softer the edges of this light.");
             public static GUIContent generalLightColor = EditorGUIUtility.TrTextContent("Color", "Adjusts this light’s color.");
@@ -141,6 +143,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
         SerializedProperty m_NormalMapQuality;
         SerializedProperty m_LightOrder;
         SerializedProperty m_OverlapOperation;
+        SerializedProperty m_lightIsPersistent;
 
         // Point Light Properties
         SerializedProperty m_PointInnerAngle;
@@ -213,6 +216,7 @@ namespace UnityEditor.Experimental.Rendering.Universal
             m_NormalMapQuality = serializedObject.FindProperty("m_NormalMapQuality");
             m_LightOrder = serializedObject.FindProperty("m_LightOrder");
             m_OverlapOperation = serializedObject.FindProperty("m_OverlapOperation");
+            m_lightIsPersistent = serializedObject.FindProperty("lightIsPersistent");
 
             // Point Light
             m_PointInnerAngle = serializedObject.FindProperty("m_PointLightInnerAngle");
@@ -518,6 +522,12 @@ namespace UnityEditor.Experimental.Rendering.Universal
             EditorGUILayout.PropertyField(m_LightIntensity, Styles.generalLightIntensity);
             if (EditorGUI.EndChangeCheck())
                 m_LightIntensity.floatValue = Mathf.Max(m_LightIntensity.floatValue, 0);
+
+            EditorGUILayout.PropertyField(m_lightIsPersistent, Styles.lightIsPersistent);
+            if (m_lightIsPersistent.boolValue)
+            {
+                EditorGUILayout.HelpBox("Persistent lights are unoptimized! Use this option only if you are 100% sure you need to!",MessageType.Warning);
+            }
 
             return meshChanged;
         }

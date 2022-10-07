@@ -168,7 +168,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public static void DrawPointLight(CommandBuffer cmd, Light2D light, Mesh lightMesh, Material material)
         {
             var scale = new Vector3(light.pointLightOuterRadius, light.pointLightOuterRadius, light.pointLightOuterRadius);
-            var matrix = Matrix4x4.TRS(light.transform.position, light.transform.rotation, scale);
+            var matrix = Matrix4x4.TRS(light.Position, light.transform.rotation, scale);
             cmd.DrawMesh(lightMesh, matrix, material);
         }
 
@@ -410,7 +410,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             var transform = light.transform;
 
-            var scaledLightMat = Matrix4x4.TRS(transform.position, transform.rotation, outerRadiusScale);
+            var scaledLightMat = Matrix4x4.TRS(light.Position, transform.rotation, outerRadiusScale);
             retMatrix = Matrix4x4.Inverse(scaledLightMat);
         }
 
@@ -438,7 +438,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var outerAngle = GetNormalizedAngle(light.pointLightOuterAngle);
             var innerRadiusMult = 1 / (1 - innerRadius);
 
-            cmd.SetGlobalVector(k_LightPositionID, light.transform.position);
+            cmd.SetGlobalVector(k_LightPositionID, light.Position);
             cmd.SetGlobalMatrix(k_LightInvMatrixID, lightInverseMatrix);
             cmd.SetGlobalFloat(k_InnerRadiusMultID, innerRadiusMult);
             cmd.SetGlobalFloat(k_OuterAngleID, outerAngle);
