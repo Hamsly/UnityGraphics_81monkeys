@@ -235,6 +235,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 m_FinalBlitPass.Setup(cameraTargetDescriptor, colorTargetHandle);
                 EnqueuePass(m_FinalBlitPass);
             }
+
+            AddRenderPasses(ref renderingData);
         }
 
         public override void SetupCullingParameters(ref ScriptableCullingParameters cullingParameters, ref CameraData cameraData)
