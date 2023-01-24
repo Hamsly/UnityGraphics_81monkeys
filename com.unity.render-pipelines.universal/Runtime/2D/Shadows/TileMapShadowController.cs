@@ -17,6 +17,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private Tilemap tileMap;
         private TilemapRenderer tilemapRenderer;
 
+        [HideInInspector] public ShadowCaster2D.ShadowFilterMode filterMode;
+        [HideInInspector] public List<Light2D> filterLights;
+
         [SerializeField,HideInInspector] private int[] LayerMask = new int[0];
 
         [SerializeField] private ShadowTileLayer[] shadowTileLayers = {
@@ -163,6 +166,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 caster.ShadowHeight = currentLayer.shadowHeight;
                 caster.ZPosition = currentLayer.shadowZPosition;
                 caster.m_ApplyToSortingLayers = LayerMask;
+
+                caster.m_FilterMode = filterMode;
+                if (filterMode != ShadowCaster2D.ShadowFilterMode.None && filterLights != null)
+                {
+                    caster.m_FilterLights = filterLights;
+                }
             }
         }
     }

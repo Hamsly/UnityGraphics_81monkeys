@@ -5,6 +5,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
         _MainTex("Diffuse", 2D) = "white" {}
         _MaskTex("Mask", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}
+        _LightDodge("LightDodge",float) = 0
 
         // Legacy properties. They're here so that materials using this shader can gracefully fallback to the legacy sprite shader.
         [HideInInspector] _Color("Tint", Color) = (1,1,1,1)
@@ -61,6 +62,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
             TEXTURE2D(_MaskTex);
             SAMPLER(sampler_MaskTex);
             half4 _MainTex_ST;
+            float _LightDodge;
 
             #if USE_SHAPE_LIGHT_TYPE_0
             SHAPE_LIGHT(0)
@@ -99,7 +101,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
                 half4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
 
-                return CombinedShapeLightShared(main, mask, i.lightingUV);
+                return lerp(CombinedShapeLightShared(main, mask, i.lightingUV),main,clamp(_LightDodge,0,1));
             }
             ENDHLSL
         }

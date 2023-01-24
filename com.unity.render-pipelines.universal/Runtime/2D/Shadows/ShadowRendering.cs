@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using Unity.Mathematics;
@@ -159,6 +160,15 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 {
                     if (shadowCaster == null) continue;
                     if (!shadowCaster.isActiveAndEnabled) continue;
+                    if (shadowCaster.m_FilterMode != ShadowCaster2D.ShadowFilterMode.None)
+                    {
+                        switch (shadowCaster.m_FilterMode)
+                        {
+                            case ShadowCaster2D.ShadowFilterMode.BlackList when shadowCaster.m_FilterLights.Contains(light):
+                            case ShadowCaster2D.ShadowFilterMode.WhiteList when !shadowCaster.m_FilterLights.Contains(light):
+                                continue;
+                        }
+                    }
 
                     var position = shadowCaster.transform.position;
                     var xDiff = position.x - lightPosition.x;

@@ -7,6 +7,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth-Transparent"
         _NormalMap("Normal Map", 2D) = "bump" {}
         _OffsetMap("Offset Map", 2D) = "black" {}
         _OverlayColor("Overlay", Color) = (1,1,1,0)
+        _LightDodge("LightDodge",float) = 0
         [PerRendererData] _ObjectOffset("Object Offset", Vector) = (0,0,0,0)
 
         // Legacy properties. They're here so that materials using this shader can gracefully fallback to the legacy sprite shader.
@@ -84,6 +85,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth-Transparent"
             half4 _MainTex_ST;
             float4 _ObjectOffset;
             float4 _OverlayColor;
+            float _LightDodge;
 
             #if USE_SHAPE_LIGHT_TYPE_0
             SHAPE_LIGHT(0)
@@ -139,7 +141,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth-Transparent"
                 decodedOffset.y += _ObjectOffset.y - (i.positionWS.z * PIXELS_PER_UNIT);
                 const float2 offset = float2(decodedOffset.x * (i.scale.x),decodedOffset.y * (i.scale.y));
 
-                float4 col = CombinedShapeLightShared(main, mask, i.lightingUV + offset);
+                float4 col = lerp(CombinedShapeLightShared(main, mask, i.lightingUV + offset),main,clamp(_LightDodge,0,1));
                 o.color = float4(lerp(col.rgb,_OverlayColor.rgb,_OverlayColor.a),col.a);
                 o.depth = -offset.y;
 

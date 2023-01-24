@@ -23,6 +23,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] public int[] m_ApplyToSortingLayers = null;
         [SerializeField] Renderer2DData.ShadowMaterialTypes m_materialType = Renderer2DData.ShadowMaterialTypes.MeshShadows;
 
+        public enum ShadowFilterMode
+        {
+            None,
+            WhiteList,
+            BlackList,
+        };
+
+        [SerializeField] public ShadowFilterMode m_FilterMode = ShadowFilterMode.None;
+        [SerializeField] public List<Light2D> m_FilterLights = new List<Light2D>();
+
         public bool m_ShadowIsPersistent = false;
 
         private int tick;

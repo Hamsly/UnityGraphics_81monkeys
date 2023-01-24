@@ -63,6 +63,10 @@ namespace UnityEditor.Experimental.Rendering.Universal
             public static GUIContent isPersistent = EditorGUIUtility.TrTextContent("Shadow Is Persistent", "Shadow will always draw, not optimized");
 
             public static GUIContent basePoint = EditorGUIUtility.TrTextContent("Base Point", "The normalized y position on the texture we begin drawing from.");
+
+            public static GUIContent filterType = EditorGUIUtility.TrTextContent("Filter Type", "Determines how the shadow will discriminate light sources");
+
+            public static GUIContent filterLights = EditorGUIUtility.TrTextContent("Filter Lights", "The List of lights the shadow will use when discriminating light sources");
         }
 
         SerializedProperty m_UseRendererSilhouette;
@@ -78,6 +82,8 @@ namespace UnityEditor.Experimental.Rendering.Universal
         SerializedProperty m_ReorientPerLight;
         SerializedProperty m_basePoint;
         SerializedProperty m_ShadowIsPersistent;
+        SerializedProperty m_FilterType;
+        SerializedProperty m_FilterLights;
 
 
         SortingLayerDropDown m_SortingLayerDropDown;
@@ -100,6 +106,9 @@ namespace UnityEditor.Experimental.Rendering.Universal
 
             m_SortingLayerDropDown = new SortingLayerDropDown();
             m_SortingLayerDropDown.OnEnable(serializedObject, "m_ApplyToSortingLayers");
+
+            m_FilterType = serializedObject.FindProperty("m_FilterMode");
+            m_FilterLights = serializedObject.FindProperty("m_FilterLights");
         }
 
 
@@ -154,6 +163,14 @@ namespace UnityEditor.Experimental.Rendering.Universal
             if (m_ShadowIsPersistent.boolValue)
             {
                 EditorGUILayout.HelpBox("PERSISTENT SHADOWS ARE UNOPTIMIZED! Only use this option if you are 100% sure it is required!", MessageType.Warning);
+            }
+
+            EditorGUILayout.PropertyField(m_FilterType, Styles.filterType);
+            if (m_FilterType.enumValueIndex != 0)
+            {
+                EditorGUI.indentLevel += 1;
+                EditorGUILayout.PropertyField(m_FilterLights, Styles.filterLights);
+                EditorGUI.indentLevel -= 1;
             }
 
             serializedObject.ApplyModifiedProperties();
