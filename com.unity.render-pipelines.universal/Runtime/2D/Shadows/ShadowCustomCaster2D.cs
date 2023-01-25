@@ -10,9 +10,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
     [AddComponentMenu("Rendering/2D/Shadow Custom Caster 2D")]
     public class ShadowCustomCaster2D : ShadowCaster2D
     {
-        [SerializeField] private ShadowPipelineRendererReference m_RenderRef;
+        public ShadowPipelineRendererReference m_RenderRef;
 
-        [SerializeField] private ShadowPipelineRendererReference[] m_SilhouettedRendererRefs;
+        public ShadowPipelineRendererReference[] m_SilhouettedRendererRefs;
         public override bool HasSilhouettedRenderer => (m_SilhouettedRendererRefs?.Length ?? 0) > 0;
 
         private static readonly int k_ShadowStencilGroupID = Shader.PropertyToID("_ShadowStencilGroup");
