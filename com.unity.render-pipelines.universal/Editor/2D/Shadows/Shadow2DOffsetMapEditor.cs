@@ -653,11 +653,17 @@ namespace UnityEditor.Experimental.Rendering.Universal
                         var maxX = Mathf.Max(_imageCursorPos.x, _imageCursorPosStart.x);
                         var maxY = Mathf.Max(_imageCursorPos.y, _imageCursorPosStart.y);
 
+                        Vector4 seed = new Vector4(
+                            Random.Range(0,256),
+                            Random.Range(0,256),
+                            Random.Range(0,256),
+                            Random.Range(0,256));
+
                         for (int texX = minX; texX <= maxX; texX++)
                         {
                             for (int texY = minY; texY <= maxY; texY++)
                             {
-                                SetTextureOffsetNoise(texX, texY, noiseMax,noiseMin,noiseChaos);
+                                SetTextureOffsetNoise(texX, texY, noiseMax,noiseMin,noiseChaos,seed);
                             }
                         }
 
@@ -756,15 +762,14 @@ namespace UnityEditor.Experimental.Rendering.Universal
         /// <param name="max"></param>
         /// <param name="chaos"></param>
         /// <returns></returns>
-        private static float RandomNoiseValue(int x, int y,float min, float max, float chaos, int seed = 0)
+        private static float RandomNoiseValue(int x, int y,float min, float max, float chaos)
         {
             chaos = Mathf.Clamp(chaos, 0.01f, 0.99f);
 
-            float xx = x * chaos + seed;
-            float yy = y * chaos + seed;
+            float xx = (x * chaos);
+            float yy = (y * chaos);
 
-            float t = Mathf.Clamp01(Mathf.PerlinNoise(xx, yy));
-            return Mathf.Lerp(min,max, t);
+            return Mathf.Lerp(min,max, Mathf.PerlinNoise(xx, yy));
         }
 
         /// <summary>
@@ -774,16 +779,14 @@ namespace UnityEditor.Experimental.Rendering.Universal
         /// <param name="max"></param>
         /// <param name="chaos"></param>
         /// <returns></returns>
-        private void SetTextureOffsetNoise(int x, int y,Vector2Int noiseMax ,Vector2Int noiseMin, float chaos)
+        private void SetTextureOffsetNoise(int x, int y,Vector2Int noiseMax ,Vector2Int noiseMin, float chaos,Vector4 seed)
         {
-            var seed = (int)Time.time;
-
             y = (_workingTexture.height) - (y + 1);
 
             if (x < 0 || x >= _workingTexture.width || y < 0 || y >= _workingTexture.height) return;
 
-            var xx = Mathf.RoundToInt(RandomNoiseValue(x,y,noiseMin.x, noiseMax.x, chaos,seed));
-            var yy = Mathf.RoundToInt(RandomNoiseValue(x,y,noiseMin.y, noiseMax.y, chaos,seed - 1000));
+            var xx = Mathf.RoundToInt(RandomNoiseValue(x + (int)seed.x,y + (int)seed.y,noiseMin.x, noiseMax.x, chaos));
+            var yy = Mathf.RoundToInt(RandomNoiseValue(x + (int)seed.z,y + (int)seed.w,noiseMin.y, noiseMax.y, chaos));
 
             var prevOffset = ColorToOffset(_workingTexture.GetPixel(x, y));
             var col = OffsetToColor(prevOffset.x + xx, prevOffset.y + yy);
