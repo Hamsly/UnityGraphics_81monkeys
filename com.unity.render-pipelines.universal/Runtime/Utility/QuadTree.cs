@@ -142,7 +142,17 @@ namespace UnityEngine.Experimental.Rendering.Universal
             int i = 0;
             while (i < nodes.Count)
             {
-                var quadrant = GetQuadrant(nodes[i].Bounds);
+                var quadrant = NONE;
+                if (nodes[i] != null)
+                {
+                    quadrant = GetQuadrant(nodes[i].Bounds);
+                }
+                else
+                {
+                    nodes.RemoveAt(i);
+                    continue;
+                }
+
                 if (quadrant != NONE)
                 {
                     subTrees[quadrant].Insert(nodes[i]);
