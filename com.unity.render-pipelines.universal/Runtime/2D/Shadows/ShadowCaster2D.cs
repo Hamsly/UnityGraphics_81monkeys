@@ -259,18 +259,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public virtual void ExcludeSilhouettes(CommandBuffer cmdBuffer,int layerToRender,Material material,int groupIndex)
         {
-            if (useRendererSilhouette && IsShadowedLayer(layerToRender))
+            if (!useRendererSilhouette || !IsShadowedLayer(layerToRender)) return;
+
+            var renderers = SilhouettedRenderer;
+            if (renderers == null) return;
+
+            foreach (var currentRenderer in renderers)
             {
-                var renderers = SilhouettedRenderer;
-                if (renderers != null)
+                if (currentRenderer != null)
                 {
-                    foreach (var currentRenderer in renderers)
-                    {
-                        if (currentRenderer != null)
-                        {
-                            cmdBuffer.DrawRenderer(currentRenderer, material);
-                        }
-                    }
+                    cmdBuffer.DrawRenderer(currentRenderer, material);
                 }
             }
         }

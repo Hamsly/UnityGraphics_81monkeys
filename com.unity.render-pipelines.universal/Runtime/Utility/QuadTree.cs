@@ -22,6 +22,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         private int unitSize;
 
+        private bool didSplit = false;
+
         private const int MAX_NODES = 10;
 
         private const int NONE = -1;
@@ -108,6 +110,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var x = bounds.x;
             var y = bounds.y;
 
+            didSplit = true;
+
             subTrees[TOP_RIGHT] = new QuadTree<T>( new Rect(x + subWidth, y, subWidth, subHeight), unitSize);
             subTrees[TOP_LEFT]  = new QuadTree<T>( new Rect(x, y, subWidth, subHeight), unitSize);
             subTrees[BOT_LEFT]  = new QuadTree<T>( new Rect(x, y + subHeight, subWidth, subHeight), unitSize);
@@ -120,6 +124,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         /// <param name="node">The node to insert</param>
         public void Insert(T node)
         {
+            if(node == null) return;
+
             if (subTrees[0] != null)
             {
                 var quadrant = GetQuadrant(node.Bounds);
@@ -134,7 +140,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             if (nodes.Count <= MAX_NODES || !canSubDivide) return;
 
-            if (subTrees[0] == null)
+            if (!didSplit)
             {
                 Split();
             }
@@ -178,7 +184,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             }
 
             var quadrant = GetQuadrant(node.Bounds);
-            if (quadrant != NONE && subTrees[0] != null)
+            if (quadrant != NONE && didSplit)
             {
                 subTrees[quadrant].Remove(node);
             }
@@ -196,7 +202,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 #if UNITY_EDITOR
             accessed += 1;
 #endif
-            if (subTrees[0] != null)
+            if (didSplit)
             {
                 foreach (var tree in subTrees)
                 {
