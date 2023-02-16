@@ -54,6 +54,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             nodes.Clear();
             subTrees = new QuadTree<T>[4];
+            didSplit = false;
         }
 
         /// <summary>
