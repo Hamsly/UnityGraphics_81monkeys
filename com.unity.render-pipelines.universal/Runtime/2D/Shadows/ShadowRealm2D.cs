@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Auios.QuadTree;
 
 
 namespace UnityEngine.Experimental.Rendering.Universal
@@ -62,11 +63,21 @@ namespace UnityEngine.Experimental.Rendering.Universal
             InitShadow2DWorld(rect);
         }
 
+        private class ShadowCaster2DBounds : IQuadTreeObjectBounds<ShadowCaster2D>
+        {
+            public Rect GetRect(ShadowCaster2D obj) => obj.Bounds;
+            public float GetTop(ShadowCaster2D obj) => obj.Bounds.yMax;
+            public float GetBottom(ShadowCaster2D obj) => obj.Bounds.yMin;
+            public float GetLeft(ShadowCaster2D obj) => obj.Bounds.xMin;
+            public float GetRight(ShadowCaster2D obj) => obj.Bounds.xMax;
+        }
+
         public void InitShadow2DWorld(Rect rect)
         {
-            shadowTreeA ??= new QuadTree<ShadowCaster2D>(rect,UnitSize);
-            shadowTreeB ??= new QuadTree<ShadowCaster2D>(rect,UnitSize);
-            staticShadowTree ??= new QuadTree<ShadowCaster2D>(rect,UnitSize);
+            var bounds = new ShadowCaster2DBounds();
+            shadowTreeA ??= new QuadTree<ShadowCaster2D>(rect.position,rect.size,bounds);
+            shadowTreeB ??= new QuadTree<ShadowCaster2D>(rect.position,rect.size,bounds);
+            staticShadowTree ??= new QuadTree<ShadowCaster2D>(rect.position,rect.size,bounds);
 
             HasDoneInit = true;
 
@@ -95,12 +106,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         IEnumerator GetDynamicShadows(int maxIterations)
         {
-            QuadTree<ShadowCaster2D> workingTree = currentShadowTree ? shadowTreeA : shadowTreeB;
-            workingTree.Clear();
+            var workingTree = currentShadowTree ? shadowTreeA : shadowTreeB;
+            workingTree.SoftClear();
 
             int iteration = 0;
 
-            List<ShadowCaster2D> casters = ShadowCasterGroup2DManager.GetDynamicShadows();
+            var casters = ShadowCasterGroup2DManager.GetDynamicShadows();
             var count = casters.Count;
             for (int i = 0; i < count; i++)
             {
@@ -123,17 +134,20 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public void GetShadowCasters(ref List<ShadowCaster2D> casters, Rect rect)
         {
-            staticShadowTree?.GetNodes(ref casters,rect);
+            staticShadowTree?.FindObjects(ref casters,rect);
+            //staticShadowTree.GetAll(casters);
 
             QuadTree<ShadowCaster2D> currentTree = !currentShadowTree ? shadowTreeA : shadowTreeB;
-            currentTree?.GetNodes(ref casters,rect);
+            currentTree?.FindObjects(ref casters,rect);
+
+            casters.RemoveAll(w => w == null || !w.isActiveAndEnabled);
 
             casters.Sort((a, b) => Mathf.Clamp(a.GetShadowGroup() - b.GetShadowGroup(),-1,1));
         }
 
         private void OnValidate()
         {
-            if (WorldRect.width != 0 && WorldRect.height != 0)
+            if (WorldRect.width > 0 && WorldRect.height > 0)
             {
                 InitShadow2DWorld(WorldRect);
             }
@@ -157,7 +171,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 QuadTree<ShadowCaster2D> workingTree = currentShadowTree ? shadowTreeA : shadowTreeB;
                 workingTree?.DrawGizmo(DebugOffset);
             }
-
         }
     }
 }

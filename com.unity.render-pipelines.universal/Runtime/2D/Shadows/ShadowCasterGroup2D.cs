@@ -11,12 +11,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public static int nextGroupID = 0;
         internal int m_ShadowGroup;
         List<ShadowCaster2D> m_ShadowCasters;
-        List<ShadowCaster2D> m_ShadowCastersCulled;
 
         private bool hasDoneInit = false;
-
-        public List<ShadowCaster2D> GetShadowCasters() { return m_ShadowCasters; }
-        public List<ShadowCaster2D> GetShadowCastersCulled() { return m_ShadowCastersCulled; }
 
         protected void Awake()
         {
@@ -50,7 +46,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (hasDoneInit) return;
 
             m_ShadowCasters ??= new List<ShadowCaster2D>();
-            m_ShadowCastersCulled ??= new List<ShadowCaster2D>();
+
             hasDoneInit = true;
         }
     }

@@ -121,8 +121,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 for (var i = startIndex; i < batchCount; ++i)
                 {
+#if DEBUG_LIGHTING
                     var sampleName = $"Layer Batch {i}";
                     cmd.BeginSample(sampleName);
+#endif
 
                     ref var layerBatch = ref layerBatches[i];
 
@@ -138,7 +140,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                     if (rtCount > LayerUtility.maxTextureCount)
                     {
+#if DEBUG_LIGHTING
                         cmd.EndSample(sampleName);
+#endif
                         break;
                     }
 
@@ -155,8 +159,9 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     {
                         this.RenderLights(renderingData, cmd, layerBatch.startLayerID, ref layerBatch, ref desc);
                     }
-
+#if DEBUG_LIGHTING
                     cmd.EndSample(sampleName);
+#endif
                 }
             }
 

@@ -12,7 +12,7 @@ using UnityEditor;
 
 namespace UnityEngine.Experimental.Rendering.Universal
 {
-    public class ShadowCaster2D : ShadowCasterGroup2D , IQuadTreeNode
+    public class ShadowCaster2D : ShadowCasterGroup2D
     {
         [SerializeField] protected Renderer[] m_SilhouettedRenderers;
         [SerializeField] protected bool m_UseRendererSilhouette = true;
@@ -22,6 +22,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] bool m_CastsShadows = true;
         [SerializeField] public int[] m_ApplyToSortingLayers = null;
         [SerializeField] Renderer2DData.ShadowMaterialTypes m_materialType = Renderer2DData.ShadowMaterialTypes.MeshShadows;
+
+        public Transform Transform;
 
         public enum ShadowFilterMode
         {
@@ -44,13 +46,14 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private bool forceUpdate = false;
 
         protected Rect m_Bounds;
+
+        protected float radius = 0;
         public Rect Bounds
         {
             get
             {
-                var p = transform.position;
-                //return new Rect(MBounds.x + p.x,MBounds.y + p.y,MBounds.width,MBounds.height);
-                return new Rect(p.x, p.y,0,0);
+                var p = Transform.position;
+                return new Rect(m_Bounds.x + p.x,m_Bounds.y + p.y,m_Bounds.width,m_Bounds.height);
             }
 
             set
@@ -62,7 +65,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public float ZPosition
         {
             set => m_ZPosition = value;
-            get => m_UseTransformZ ? -transform.position.z : m_ZPosition;
+            get => m_UseTransformZ ? -Transform.position.z : m_ZPosition;
         }
 
         int m_PreviousShadowGroup = 0;
@@ -109,7 +112,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             get
             {
-                var pos = transform.position;
+                var pos = Transform.position;
                 return new Vector3(pos.x, pos.y, ZPosition);
             }
         }
@@ -133,6 +136,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         protected new void Awake()
         {
             base.Awake();
+
+            Transform = transform;
 
             ForceUpdate();
 

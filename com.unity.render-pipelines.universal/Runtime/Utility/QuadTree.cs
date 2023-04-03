@@ -1,218 +1,305 @@
+﻿// Copyright 2020 Connor Andrew Ngo
+// Licensed under the MIT License
+
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
-
-
-namespace UnityEngine.Experimental.Rendering.Universal
+namespace Auios.QuadTree
 {
-    public interface IQuadTreeNode
+    /// <summary>
+    /// A tree data structure in which each node has exactly four children.
+    /// Used to partition a two-dimensional space by recursively subdividing it into four quadrants.
+    /// Allows to efficiently find objects spatially relative to each other.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the QuadTree.</typeparam>
+    public class QuadTree<T>
     {
-        public Rect Bounds { get; }
-    }
+        /// <summary>The area of this quadrant.</summary>
+        public Rect Area;
+        /// <summary>Objects in this quadrant.</summary>
+        private readonly HashSet<T> _objects;
+        /// <summary>The bounds which this quadrant expects its objects to conform to.</summary>
+        private readonly IQuadTreeObjectBounds<T> _objectBounds;
+        /// <summary>If this quadrant has sub quadrants. Objects only exist on quadrants without children.</summary>
+        private bool _hasChildren;
 
-    public class QuadTree<T> where T : IQuadTreeNode
-    {
-        private Rect bounds;
+        private bool _softClear;
 
-        private List<T> nodes;
+        /// <summary>Top left quadrant.</summary>
+        private QuadTree<T> quad_TL;
+        /// <summary>Top right quadrant.</summary>
+        private QuadTree<T> quad_TR;
+        /// <summary>Bottom left quadrant.</summary>
+        private QuadTree<T> quad_BL;
+        /// <summary>Bottom right quadrant.</summary>
+        private QuadTree<T> quad_BR;
 
-        private bool canSubDivide;
+        /// <summary>Gets the current depth level of this quadrant.</summary>
+        public int CurrentLevel { get; }
+        /// <summary>Gets the max depth level.</summary>
+        public int MaxLevel { get; }
+        /// <summary>Gets the max number of objects in this quadrant.</summary>
+        public int MaxObjects { get; }
 
-        private QuadTree<T>[] subTrees;
-
-        private int unitSize;
-
-        private bool didSplit = false;
-
-        private const int MAX_NODES = 10;
-
-        private const int NONE = -1;
-        private const int TOP_RIGHT = 0;
-        private const int TOP_LEFT = 1;
-        private const int BOT_RIGHT = 2;
-        private const int BOT_LEFT = 3;
 
 #if UNITY_EDITOR
         private float accessed = 0;
 #endif
 
-        public QuadTree(Rect bounds,int unitSize = 1)
+        /// <summary>Initializes a new instance of the <see cref="T:Auios.QuadTree.QuadTree`1"></see> class.</summary>
+        /// <param name="x">The x-coordinate of the upper-left corner of the boundary rectangle.</param>
+        /// <param name="y">The y-coordinate of the upper-left corner of the boundary rectangle.</param>
+        /// <param name="width">The width of the boundary rectangle.</param>
+        /// <param name="height">The height of the boundary rectangle.</param>
+        /// <param name="objectBounds">The set of methods for getting boundaries of an element.</param>
+        /// <param name="maxObjects">The max number of elements in one rectangle.</param>
+        /// <param name="maxLevel">The max depth level.</param>
+        /// <param name="currentLevel">The current depth level. Leave default if this is the root QuadTree.</param>
+        public QuadTree(float x, float y, float width, float height, IQuadTreeObjectBounds<T> objectBounds, int maxObjects = 10, int maxLevel = 5, int currentLevel = 0)
         {
-            subTrees = null;
-            this.bounds = bounds;
-            this.unitSize = unitSize;
+            Area = new Rect(x, y, width, height);
+            _objects = new HashSet<T>();
+            _objectBounds = objectBounds;
 
-            canSubDivide = bounds.width > unitSize && bounds.height > unitSize;
-            nodes = new List<T>();
-            subTrees = new QuadTree<T>[4];
+            CurrentLevel = currentLevel;
+            MaxLevel = maxLevel;
+            MaxObjects = maxObjects;
+
+            _hasChildren = false;
+            _softClear = false;
         }
 
-        /// <summary>
-        /// Clear the Quadtree
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="T:Auios.QuadTree.QuadTree`1"></see> class.</summary>
+        /// <param name="width">The width of the boundary rectangle.</param>
+        /// <param name="height">The height of the boundary rectangle.</param>
+        /// <param name="objectBounds">The set of methods for getting boundaries of an element.</param>
+        /// <param name="maxObjects">The max number of elements in one rectangle.</param>
+        /// <param name="maxLevel">The max depth level.</param>
+        /// <param name="currentLevel">The current depth level. Leave default if this is the root QuadTree.</param>
+        public QuadTree(float width, float height, IQuadTreeObjectBounds<T> objectBounds, int maxObjects = 10, int maxLevel = 5, int currentLevel = 0)
+            : this(0, 0, width, height, objectBounds, maxObjects, maxLevel, currentLevel) { }
+
+        /// <summary>Initializes a new instance of the <see cref="T:Auios.QuadTree.QuadTree`1"></see> class.</summary>
+        /// <param name="size">The size of the boundary rectangle.</param>
+        /// <param name="objectBounds">The set of methods for getting boundaries of an element.</param>
+        /// <param name="maxObjects">The max number of elements in one rectangle.</param>
+        /// <param name="maxLevel">The max depth level.</param>
+        /// <param name="currentLevel">The current depth level. Leave default if this is the root QuadTree.</param>
+        public QuadTree(Vector2 size, IQuadTreeObjectBounds<T> objectBounds, int maxObjects = 10, int maxLevel = 5, int currentLevel = 0)
+            : this(0, 0, size.x, size.y, objectBounds, maxObjects, maxLevel, currentLevel) { }
+
+        /// <summary>Initializes a new instance of the <see cref="T:Auios.QuadTree.QuadTree`1"></see> class.</summary>
+        /// <param name="position">The position of the boundary rectangle.</param>
+        /// <param name="size">The size of the boundary rectangle.</param>
+        /// <param name="objectBounds">The set of methods for getting boundaries of an element.</param>
+        /// <param name="maxObjects">The max number of elements in one rectangle.</param>
+        /// <param name="maxLevel">The max depth level.</param>
+        /// <param name="currentLevel">The current depth level. Leave default if this is the root QuadTree.</param>
+        public QuadTree(Vector2 position, Vector2 size, IQuadTreeObjectBounds<T> objectBounds, int maxObjects = 10, int maxLevel = 5, int currentLevel = 0)
+            : this(position.x, position.y, size.x, size.y, objectBounds, maxObjects, maxLevel, currentLevel) { }
+
+        private bool IsObjectInside(T obj)
+        {
+            var r = _objectBounds.GetRect(obj);
+            if (r.xMin < Area.xMin ||
+                r.yMin < Area.yMin ||
+                r.xMax > Area.xMax ||
+                r.yMax > Area.yMax) return false;
+            return true;
+        }
+
+        /// <summary>Checks if the current quadrant is overlapping with a <see cref="T:Auios.QuadTree.QuadTreeRect"></see></summary>
+        private bool IsOverlapping(Rect rect)
+        {
+            return Area.Overlaps(rect);
+        }
+
+        /// <summary>Splits the current quadrant into four new quadrants and drops all objects to the lower quadrants.</summary>
+        private void Quarter()
+        {
+            if (CurrentLevel >= MaxLevel) return;
+
+            int nextLevel = CurrentLevel + 1;
+            _hasChildren = true;
+
+            var ww = Area.width * 0.5f;
+            var hh  = Area.height * 0.5f;
+
+            if (!_softClear || quad_TL == null)
+            {
+                quad_TL = new QuadTree<T>(Area.x, Area.y, ww, hh, _objectBounds, MaxObjects, MaxLevel, nextLevel);
+                quad_TR = new QuadTree<T>(Area.center.x, Area.y, ww, hh, _objectBounds, MaxObjects, MaxLevel, nextLevel);
+                quad_BL = new QuadTree<T>(Area.x, Area.center.y, ww, hh, _objectBounds, MaxObjects, MaxLevel, nextLevel);
+                quad_BR = new QuadTree<T>(Area.center.x, Area.center.y, ww, hh, _objectBounds, MaxObjects, MaxLevel,nextLevel);
+            }
+            else
+            {
+                quad_TL?.SoftClear();
+                quad_TR?.SoftClear();
+                quad_BL?.SoftClear();
+                quad_BR?.SoftClear();
+                _softClear = false;
+            }
+
+
+            _objects.RemoveWhere(o =>
+                                     quad_TL.Insert(o) ||
+                                     quad_TR.Insert(o) ||
+                                     quad_BL.Insert(o) ||
+                                     quad_BR.Insert(o));
+        }
+
+        public void GetAll(List<T> list )
+        {
+            if (_hasChildren && !_softClear)
+            {
+                quad_TL.GetAll(list);
+                quad_TR.GetAll(list);
+                quad_BL.GetAll(list);
+                quad_BR.GetAll(list);
+            }
+            list.AddRange(_objects);
+        }
+
+
+        /// <summary> Removes all elements from the <see cref="T:Auios.QuadTree.QuadTree`1"></see>.</summary>
         public void Clear()
         {
-            nodes.Clear();
-            subTrees = new QuadTree<T>[4];
-            didSplit = false;
+            if(_hasChildren)
+            {
+                quad_TL.Clear();
+                quad_TL = null;
+                quad_TR.Clear();
+                quad_TR = null;
+                quad_BL.Clear();
+                quad_BL = null;
+                quad_BR.Clear();
+                quad_BR = null;
+            }
+
+            _objects.Clear();
+            _hasChildren = false;
         }
 
-        /// <summary>
-        /// Check if the Quad Tree contains the rect
-        /// </summary>
-        /// <param name="rect">The rect to check against</param>
-        /// <returns>An int denoting the quadrant the rect fits within, -1 if the rect fits in no quadrant</returns>
-        private int GetQuadrant(Rect rect)
+        /// <summary>Effectively removes all elements from the tree with out deallocating any managed references.</summary>
+        public void SoftClear()
         {
-            var index = NONE;
-            float xMidpoint = bounds.x + (bounds.width / 2);
-            float yMidpoint = bounds.y + (bounds.height / 2);
-
-            // Is node on top
-            bool topQuadrant = (rect.y < yMidpoint && rect.y + rect.height < yMidpoint);
-            // Is node on bottom
-            bool bottomQuadrant = (rect.y > yMidpoint);
-
-            // Node is on the left
-            if (rect.x < xMidpoint && rect.x + rect.width < xMidpoint)
-            {
-                if (topQuadrant)
-                {
-                    index = TOP_LEFT;
-                }
-                else if (bottomQuadrant)
-                {
-                    index = BOT_LEFT;
-                }
-            }
-            // Node is on the right
-            else if (rect.x > xMidpoint)
-            {
-                if (topQuadrant)
-                {
-                    index = TOP_RIGHT;
-                }
-                else if (bottomQuadrant)
-                {
-                    index = BOT_RIGHT;
-                }
-            }
-
-            return index;
+            _hasChildren = false;
+            _softClear = true;
+            _objects.Clear();
         }
 
-        /// <summary>
-        /// Split the tree and by creating the sub trees
-        /// </summary>
-        private void Split()
+        /// <summary> Inserts an object into the <see cref="T:Auios.QuadTree.QuadTree`1"></see>.</summary>
+        /// <param name="obj">The object to insert.</param>
+        /// <returns>true if the object is successfully added to the <see cref="T:Auios.QuadTree.QuadTree`1"></see>; false if object is not added to the <see cref="T:Auios.QuadTree.QuadTree`1"></see>.</returns>
+        public bool Insert(T obj)
         {
-            var subWidth = bounds.width / 2;
-            var subHeight = bounds.height / 2;
-            var x = bounds.x;
-            var y = bounds.y;
+            if(obj == null) throw new ArgumentNullException(nameof(obj));
 
-            didSplit = true;
+            if (!IsObjectInside(obj)) return false;
 
-            subTrees[TOP_RIGHT] = new QuadTree<T>( new Rect(x + subWidth, y, subWidth, subHeight), unitSize);
-            subTrees[TOP_LEFT]  = new QuadTree<T>( new Rect(x, y, subWidth, subHeight), unitSize);
-            subTrees[BOT_LEFT]  = new QuadTree<T>( new Rect(x, y + subHeight, subWidth, subHeight), unitSize);
-            subTrees[BOT_RIGHT] = new QuadTree<T>( new Rect(x + subWidth, y + subHeight, subWidth, subHeight), unitSize);
+            if (_hasChildren)
+            {
+                if (quad_TL.Insert(obj)) return true;
+                if (quad_TR.Insert(obj)) return true;
+                if (quad_BL.Insert(obj)) return true;
+                if (quad_BR.Insert(obj)) return true;
+
+                _objects.Add(obj);
+            }
+            else
+            {
+                _objects.Add(obj);
+                if(_objects.Count > MaxObjects)
+                {
+                    Quarter();
+                }
+            }
+
+            return true;
         }
 
-        /// <summary>
-        /// Insert a node into the Quad Tree
-        /// </summary>
-        /// <param name="node">The node to insert</param>
-        public void Insert(T node)
+        /// <summary> Inserts a collection of objects into the <see cref="T:Auios.QuadTree.QuadTree`1"></see>.</summary>
+        /// <param name="objects">The collection of objects to insert.</param>
+        public void InsertRange(IEnumerable<T> objects)
         {
-            if(node == null) return;
-
-            if (subTrees[0] != null)
+            foreach(T obj in objects)
             {
-                var quadrant = GetQuadrant(node.Bounds);
-
-                if (quadrant != NONE)
-                {
-                    subTrees[quadrant].Insert(node);
-                    return;
-                }
-            }
-            nodes.Add(node);
-
-            if (nodes.Count <= MAX_NODES || !canSubDivide) return;
-
-            if (!didSplit)
-            {
-                Split();
-            }
-
-            int i = 0;
-            while (i < nodes.Count)
-            {
-                var quadrant = NONE;
-                if (nodes[i] != null)
-                {
-                    quadrant = GetQuadrant(nodes[i].Bounds);
-                }
-                else
-                {
-                    nodes.RemoveAt(i);
-                    continue;
-                }
-
-                if (quadrant != NONE)
-                {
-                    subTrees[quadrant].Insert(nodes[i]);
-                    nodes.RemoveAt(i);
-                }
-                else
-                {
-                    i++;
-                }
+                Insert(obj);
             }
         }
 
-        public void Remove(T node)
+        /// <summary>Returns the total number of obejcts in the <see cref="T:Auios.QuadTree.QuadTree`1"></see> and its children.</summary>
+        /// <returns>the total number of objects in this instance.</returns>
+        public int Count()
         {
-            for( int i = 0; i < nodes.Count; i++)
+            int count = 0;
+            if (_hasChildren)
             {
-                T n = nodes[i];
-                if (n.Equals(node))
-                {
-                    nodes.RemoveAt(i);
-                    return;
-                }
+                count += quad_TL.Count();
+                count += quad_TR.Count();
+                count += quad_BL.Count();
+                count += quad_BR.Count();
+            }
+            else
+            {
+                count = _objects.Count;
             }
 
-            var quadrant = GetQuadrant(node.Bounds);
-            if (quadrant != NONE && didSplit)
-            {
-                subTrees[quadrant].Remove(node);
-            }
+            return count;
         }
 
-        /// <summary>
-        /// Populate the given list with all nodes that are close to the given rectangle
-        /// </summary>
-        /// <param name="nodeList">The list to populate</param>
-        /// <param name="searchRect">The rect to search the quad tree with</param>
-        public void GetNodes(ref List<T> nodeList, Rect searchRect)
+        /// <summary> Returns every <see cref="T:Auios.QuadTree.QuadTreeRect"></see> from the <see cref="T:Auios.QuadTree.QuadTree`1"></see>.</summary>
+        /// <returns> an array of <see cref="T:Auios.QuadTree.QuadTreeRect"></see> from the <see cref="T:Auios.QuadTree.QuadTree`1"></see>.</returns>
+        public Rect[] GetGrid()
         {
-            if(!searchRect.Overlaps(bounds)) return;
+            List<Rect> grid = new List<Rect> {Area};
+            if (_hasChildren)
+            {
+                grid.AddRange(quad_TL.GetGrid());
+                grid.AddRange(quad_TR.GetGrid());
+                grid.AddRange(quad_BL.GetGrid());
+                grid.AddRange(quad_BR.GetGrid());
+            }
+            return grid.ToArray();
+        }
 
+        /// <summary>Searches for objects in any quadrants which the passed region overlaps, but not specifically within that region.</summary>
+        /// <param name="rect">The search region.</param>
+        /// <returns>an array of objects.</returns>
+        public void FindObjects(ref List<T> foundObjects, Rect rect)
+        {
+
+            if(_hasChildren)
+            {
+                quad_TL.FindObjects(ref foundObjects,rect);
+                quad_TR.FindObjects(ref foundObjects,rect);
+                quad_BL.FindObjects(ref foundObjects,rect);
+                quad_BR.FindObjects(ref foundObjects,rect);
+            }
+
+            if (!IsOverlapping(rect)) return;
 #if UNITY_EDITOR
             accessed += 1;
 #endif
-            if (didSplit)
+            foreach (var obj in _objects)
             {
-                foreach (var tree in subTrees)
+                if(rect.Overlaps(_objectBounds.GetRect(obj)))
                 {
-                    tree.GetNodes(ref nodeList, searchRect);
+                    foundObjects.Add(obj);
                 }
             }
 
-           nodeList.AddRange(nodes);
         }
+        public void FindObjects(ref List<T> foundObjects,T bounds)
+        {
+            FindObjects(ref foundObjects,new Rect(_objectBounds.GetLeft(bounds), _objectBounds.GetTop(bounds), _objectBounds.GetRight(bounds), _objectBounds.GetBottom(bounds)));
+        }
+
+
+#if UNITY_EDITOR
 
         public void DrawGizmo(float buffer = 0)
         {
@@ -222,21 +309,23 @@ namespace UnityEngine.Experimental.Rendering.Universal
             accessed = 0;
 #endif
 
-            var p1 = new Vector2(bounds.xMin + buffer, bounds.yMin + buffer);
-            var p2 = new Vector2(bounds.xMin + buffer, bounds.yMax - buffer);
-            var p3 = new Vector2(bounds.xMax - buffer, bounds.yMin + buffer);
-            var p4 = new Vector2(bounds.xMax - buffer, bounds.yMax - buffer);
+            var p1 = new Vector2(Area.xMin + buffer, Area.yMin + buffer);
+            var p2 = new Vector2(Area.xMin + buffer, Area.yMax - buffer);
+            var p3 = new Vector2(Area.xMax - buffer, Area.yMin + buffer);
+            var p4 = new Vector2(Area.xMax - buffer, Area.yMax - buffer);
 
             Gizmos.DrawLine(p1, p2);
             Gizmos.DrawLine(p2, p4);
             Gizmos.DrawLine(p3, p4);
             Gizmos.DrawLine(p1, p3);
 
-            if (subTrees[0] == null) return;
-            subTrees[0].DrawGizmo(buffer);
-            subTrees[1].DrawGizmo(buffer);
-            subTrees[2].DrawGizmo(buffer);
-            subTrees[3].DrawGizmo(buffer);
+            if (!_hasChildren) return;
+            quad_TL.DrawGizmo(buffer);
+            quad_TR.DrawGizmo(buffer);
+            quad_BL.DrawGizmo(buffer);
+            quad_BR.DrawGizmo(buffer);
         }
+
+#endif
     }
 }

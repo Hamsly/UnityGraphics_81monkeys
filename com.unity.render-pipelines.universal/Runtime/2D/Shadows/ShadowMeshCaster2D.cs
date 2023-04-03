@@ -22,6 +22,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] int m_ShapePathHash = 0;
         [SerializeField] Mesh m_Mesh;
 
+        //private MaterialPropertyBlock materialPropertyBlock;
+
         internal Mesh mesh => m_Mesh;
         internal Vector3[] shapePath => m_ShapePath;
         internal int shapePathHash { get { return m_ShapePathHash; } set { m_ShapePathHash = value; } }
@@ -31,13 +33,22 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public float ShadowHeight
         {
-            set => m_Height = value;
+            set
+            {
+                m_Height = value;
+                //materialPropertyBlock.SetFloat(k_ShadowHeightID,m_Height);
+            }
             get => m_Height;
         }
 
         private new void Awake()
         {
+
             base.Awake();
+
+            //materialPropertyBlock = new MaterialPropertyBlock();
+            //materialPropertyBlock.SetFloat(k_ShadowHeightID,ShadowHeight);
+            //materialPropertyBlock.SetVector(k_ShadowCenterID,shadowPosition);
 
             m_SilhouettedRenderers ??= Array.Empty<Renderer>();
 
@@ -63,12 +74,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
 #endif
 
             Vector3 inverseScale = Vector3.zero;
-            Vector3 relOffset = transform.position;
+            Vector3 relOffset = Transform.position;
 
-            if (transform.lossyScale.x != 0 && transform.lossyScale.y != 0)
+            if (Transform.lossyScale.x != 0 && Transform.lossyScale.y != 0)
             {
-                inverseScale = new Vector3(1 / transform.lossyScale.x, 1 / transform.lossyScale.y);
-                relOffset = new Vector3(inverseScale.x * -transform.position.x, inverseScale.y * -transform.position.y);
+                inverseScale = new Vector3(1 / Transform.lossyScale.x, 1 / Transform.lossyScale.y);
+                relOffset = new Vector3(inverseScale.x * -Transform.position.x, inverseScale.y * -Transform.position.y);
             }
 
             if (m_ShapePath == null || m_ShapePath.Length == 0)
@@ -124,7 +135,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 Vector3 pp = point;
 
-                var lossyScale = transform.lossyScale;
+                var lossyScale = Transform.lossyScale;
 
                 pp.x *= lossyScale.x;
                 pp.y *= lossyScale.y;
@@ -153,7 +164,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
                 var point = pp + transformRef.position;
                 Gizmos.DrawLine(point, point + new Vector3(0, ShadowHeight, 0));
-
             }
 
             Gizmos.DrawWireCube(m_Bounds.center + (Vector2)transform.position,m_Bounds.size);
@@ -162,9 +172,13 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public override void CastShadows(CommandBuffer cmdBuffer, int layerToRender,Light2D light, Material material,int groupIndex)
         {
             if (!CastsShadows || material == null || !IsShadowedLayer(layerToRender)) return;
+
+            //materialPropertyBlock.SetVector(k_ShadowCenterID,shadowPosition);
+
             cmdBuffer.SetGlobalFloat(k_ShadowHeightID, ShadowHeight);
             cmdBuffer.SetGlobalVector(k_ShadowCenterID, shadowPosition);
-            cmdBuffer.DrawMesh(mesh, transform.localToWorldMatrix, material);
+            cmdBuffer.DrawMesh(mesh, Transform.localToWorldMatrix, material,0,-1,null);
+            //cmdBuffer.DrawMesh(mesh, Transform.localToWorldMatrix, material,0,-1, materialPropertyBlock);
         }
 
 #if UNITY_EDITOR
