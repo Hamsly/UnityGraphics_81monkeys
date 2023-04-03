@@ -71,12 +71,31 @@ namespace UnityEngine.Experimental.Rendering.Universal
             {
                 case SpriteCasterType.Standing:
                     GenerateStandingSpriteMesh(ref mesh);
+                    RecalculateBounds();
                     break;
 
                 case SpriteCasterType.Flat:
                     GenerateFlatSpriteMesh(size, direction, ref mesh);
+                    RecalculateBounds();
                     break;
             }
+        }
+
+        private void RecalculateBounds()
+        {
+            float rr = 0;
+            switch (m_SpriteCasterType)
+            {
+                case SpriteCasterType.Standing:
+                    rr = m_Size.x;
+                    break;
+
+                case SpriteCasterType.Flat:
+                    rr = m_Size.magnitude;
+                    break;
+            }
+
+            m_Bounds = new Rect(-rr, -rr, rr * 2, rr * 2);
         }
 
         private void GenerateStandingSpriteMesh( ref Mesh mesh)
@@ -84,12 +103,14 @@ namespace UnityEngine.Experimental.Rendering.Universal
             mesh = null;
         }
 
+        const int NUMBER_OF_VERTS = 5;
+        Vector3[] vertices = new Vector3[NUMBER_OF_VERTS];
+        Vector2[] UVs = new Vector2[NUMBER_OF_VERTS];
+        int[] triangles = new int[4 * 3];
+
         private void GenerateFlatSpriteMesh(Vector2 size,float direction, ref Mesh mesh)
         {
-            var numberOfVerts = 5;
-            Vector3[] vertices = new Vector3[numberOfVerts];
-            Vector2[] UVs = new Vector2[numberOfVerts];
-            int[] triangles = new int[4 * 3];
+
 
 
             //direction -= (Mathf.PI / 2);
@@ -110,7 +131,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             UVs[3] = new Vector2(1, 1);
             UVs[4] = new Vector2(0.5f, 0.5f);
 
-            float dd = UnityEngine.Mathf.Sqrt((size.x * size.x) + (size.y * size.y));
+            //float dd = UnityEngine.Mathf.Sqrt((size.x * size.x) + (size.y * size.y));
 
             int i = 0;
             triangles[i++] = 0;
