@@ -97,7 +97,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex] == null)
             {
                 rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex] = CoreUtils.CreateEngineMaterial(rendererData.GetShaderType(shadowMaterialType));
-                rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, shadowMaterialIndex);
+                rendererData.shadowMaterials[(int)shadowMaterialType,shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, shadowMaterialIndex + 1);
                 //Debug.Log("Built " + shadowMaterialType + " material " + shadowMaterialIndex);
             }
 
@@ -112,7 +112,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (rendererData.removeSelfShadowMaterials[shadowMaterialIndex] == null)
             {
                 rendererData.removeSelfShadowMaterials[shadowMaterialIndex] = CoreUtils.CreateEngineMaterial(rendererData.removeSelfShadowShader);
-                rendererData.removeSelfShadowMaterials[shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, shadowMaterialIndex);
+                rendererData.removeSelfShadowMaterials[shadowMaterialIndex].SetFloat(k_ShadowStencilGroupID, shadowMaterialIndex + 1);
                 //Debug.Log("Built Remove Self material " + shadowMaterialIndex);
             }
             return rendererData.removeSelfShadowMaterials[shadowMaterialIndex];
@@ -163,6 +163,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             // Draw the shadow casting group first
             foreach (var shadowCaster in shadowCasters)
             {
+
                 switch (shadowCaster.m_FilterMode)
                 {
                     default:
@@ -177,6 +178,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     continue;
                 }
 
+
                 // If the group has ended, draw the silhouettes..
                 var shadowGroupIndex = shadowCaster.GetShadowGroup();
                 if (LightUtility.CheckForChange(shadowGroupIndex, ref previousShadowGroupIndex))
@@ -184,7 +186,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     //Profiler.BeginSample("Exclude");
                     if (previousShadowGroupIndex != -1)
                     {
-
                         var removeSelfShadowMaterial = pass.rendererData.GetRemoveSelfShadowMaterial(incrementingGroupIndex);
                         foreach (var silhouette in silhouettes)
                         {

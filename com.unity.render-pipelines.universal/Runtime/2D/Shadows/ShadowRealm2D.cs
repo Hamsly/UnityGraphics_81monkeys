@@ -74,10 +74,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public void InitShadow2DWorld(Rect rect)
         {
+            float size = Mathf.Min(rect.width, rect.height);
+            int targetLevel = 0;
+            for (int i = 0; size > UnitSize; i++)
+            {
+                targetLevel += 1;
+                size *= 0.5f;
+            }
+            int maxShadows = 10;
+
             var bounds = new ShadowCaster2DBounds();
-            shadowTreeA ??= new QuadTree<ShadowCaster2D>(rect.position,rect.size,bounds);
-            shadowTreeB ??= new QuadTree<ShadowCaster2D>(rect.position,rect.size,bounds);
-            staticShadowTree ??= new QuadTree<ShadowCaster2D>(rect.position,rect.size,bounds);
+            shadowTreeA ??= new QuadTree<ShadowCaster2D>(rect.position,rect.size,bounds,maxShadows,targetLevel);
+            shadowTreeB ??= new QuadTree<ShadowCaster2D>(rect.position,rect.size,bounds,maxShadows,targetLevel);
+            staticShadowTree ??= new QuadTree<ShadowCaster2D>(rect.position,rect.size,bounds,maxShadows,targetLevel);
 
             HasDoneInit = true;
 
