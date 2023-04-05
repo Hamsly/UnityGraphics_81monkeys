@@ -154,6 +154,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             casters.Sort((a, b) => Mathf.Clamp(a.GetShadowGroup() - b.GetShadowGroup(),-1,1));
         }
 
+#if UNITY_EDITOR
         private void OnValidate()
         {
             if (WorldRect.width > 0 && WorldRect.height > 0)
@@ -181,5 +182,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 workingTree?.DrawGizmo(DebugOffset);
             }
         }
+#endif
     }
 }
