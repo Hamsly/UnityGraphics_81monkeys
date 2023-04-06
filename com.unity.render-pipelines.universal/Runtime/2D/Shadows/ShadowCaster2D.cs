@@ -52,6 +52,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             get
             {
+                if (Transform == null) return default;
                 var p = Transform.position;
                 return new Rect(m_Bounds.x + p.x,m_Bounds.y + p.y,m_Bounds.width,m_Bounds.height);
             }
