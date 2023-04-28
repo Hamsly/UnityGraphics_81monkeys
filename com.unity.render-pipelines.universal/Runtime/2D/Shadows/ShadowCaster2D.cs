@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         [SerializeField] public int[] m_ApplyToSortingLayers = null;
         [SerializeField] Renderer2DData.ShadowMaterialTypes m_materialType = Renderer2DData.ShadowMaterialTypes.MeshShadows;
 
-        [NonSerialized] protected Transform Transform;
+        protected Transform Transform => transform;
 
         public enum ShadowFilterMode
         {
@@ -137,8 +137,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
         protected new void Awake()
         {
             base.Awake();
-
-            Transform = transform;
 
             ForceUpdate();
 
