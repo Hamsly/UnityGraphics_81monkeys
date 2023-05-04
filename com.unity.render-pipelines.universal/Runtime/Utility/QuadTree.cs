@@ -19,7 +19,7 @@ namespace Auios.QuadTree
         /// <summary>The area of this quadrant.</summary>
         public Rect Area;
         /// <summary>Objects in this quadrant.</summary>
-        private readonly HashSet<T> _objects;
+        private readonly List<T> _objects;
         /// <summary>The bounds which this quadrant expects its objects to conform to.</summary>
         private readonly IQuadTreeObjectBounds<T> _objectBounds;
         /// <summary>If this quadrant has sub quadrants. Objects only exist on quadrants without children.</summary>
@@ -60,7 +60,7 @@ namespace Auios.QuadTree
         public QuadTree(float x, float y, float width, float height, IQuadTreeObjectBounds<T> objectBounds, int maxObjects = 10, int maxLevel = 5, int currentLevel = 0)
         {
             Area = new Rect(x, y, width, height);
-            _objects = new HashSet<T>();
+            _objects = new List<T>(maxObjects);
             _objectBounds = objectBounds;
 
             CurrentLevel = currentLevel;
@@ -144,11 +144,17 @@ namespace Auios.QuadTree
             }
 
 
-            _objects.RemoveWhere(o =>
-                                     quad_TL.Insert(o) ||
-                                     quad_TR.Insert(o) ||
-                                     quad_BL.Insert(o) ||
-                                     quad_BR.Insert(o));
+            for (int i = 0; i < _objects.Count; i++)
+            {
+                var o = _objects[i];
+                if (quad_TL.Insert(o) ||
+                    quad_TR.Insert(o) ||
+                    quad_BL.Insert(o) ||
+                    quad_BR.Insert(o))
+                {
+                    _objects.RemoveAt(i--);
+                }
+            }
         }
 
         public void GetAll(List<T> list )
@@ -271,7 +277,6 @@ namespace Auios.QuadTree
         /// <returns>an array of objects.</returns>
         public void FindObjects(ref List<T> foundObjects, Rect rect)
         {
-
             if(_hasChildren)
             {
                 quad_TL.FindObjects(ref foundObjects,rect);
@@ -284,14 +289,22 @@ namespace Auios.QuadTree
 #if UNITY_EDITOR
             accessed += 1;
 #endif
-            foreach (var obj in _objects)
+
+
+            for (var i = 0; i < _objects.Count; i++)
             {
-                if(rect.Overlaps(_objectBounds.GetRect(obj)))
+                var obj = _objects[i];
+                if (obj == null)
+                {
+                    _objects.RemoveAt(i--);
+                    continue;
+                }
+
+                if (rect.Overlaps(_objectBounds.GetRect(obj)))
                 {
                     foundObjects.Add(obj);
                 }
             }
-
         }
         public void FindObjects(ref List<T> foundObjects,T bounds)
         {
