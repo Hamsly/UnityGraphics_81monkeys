@@ -202,7 +202,7 @@ namespace Auios.QuadTree
         /// <returns>true if the object is successfully added to the <see cref="T:Auios.QuadTree.QuadTree`1"></see>; false if object is not added to the <see cref="T:Auios.QuadTree.QuadTree`1"></see>.</returns>
         public bool Insert(T obj)
         {
-            if(obj == null) throw new ArgumentNullException(nameof(obj));
+            if (!_objectBounds.IsValid(obj)) return false;
 
             if (!IsObjectInside(obj)) return false;
 
@@ -306,21 +306,13 @@ namespace Auios.QuadTree
                 }
             }
         }
-        public void FindObjects(ref List<T> foundObjects,T bounds)
-        {
-            FindObjects(ref foundObjects,new Rect(_objectBounds.GetLeft(bounds), _objectBounds.GetTop(bounds), _objectBounds.GetRight(bounds), _objectBounds.GetBottom(bounds)));
-        }
-
 
 #if UNITY_EDITOR
 
         public void DrawGizmo(float buffer = 0)
         {
-
-#if UNITY_EDITOR
             Gizmos.color = Color.Lerp(Color.yellow , Color.cyan,accessed);
             accessed = 0;
-#endif
 
             var p1 = new Vector2(Area.xMin + buffer, Area.yMin + buffer);
             var p2 = new Vector2(Area.xMin + buffer, Area.yMax - buffer);
