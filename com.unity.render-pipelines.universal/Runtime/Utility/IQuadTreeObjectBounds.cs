@@ -7,6 +7,7 @@ namespace Auios.QuadTree
 {
     public interface IQuadTreeObjectBounds<in T>
     {
+        bool IsValid(T obj);
         Rect GetRect(T obj);
         float GetTop(T obj);
         float GetBottom(T obj);

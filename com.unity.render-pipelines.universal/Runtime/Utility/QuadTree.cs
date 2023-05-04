@@ -294,7 +294,7 @@ namespace Auios.QuadTree
             for (var i = 0; i < _objects.Count; i++)
             {
                 var obj = _objects[i];
-                if (obj == null)
+                if (!_objectBounds.IsValid(obj))
                 {
                     _objects.RemoveAt(i--);
                     continue;

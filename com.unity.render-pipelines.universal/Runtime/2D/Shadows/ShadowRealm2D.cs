@@ -65,6 +65,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         private class ShadowCaster2DBounds : IQuadTreeObjectBounds<ShadowCaster2D>
         {
+            public bool IsValid(ShadowCaster2D obj) => obj != null;
             public Rect GetRect(ShadowCaster2D obj) => obj.Bounds;
             public float GetTop(ShadowCaster2D obj) => obj.Bounds.yMax;
             public float GetBottom(ShadowCaster2D obj) => obj.Bounds.yMin;
