@@ -11,7 +11,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
     [RequireComponent(typeof(Tilemap))]
     [RequireComponent(typeof(TilemapRenderer))]
 
-    [ExecuteInEditMode]
     public class TileMapShadowController : CompositeShadowCaster2D
     {
         private Tilemap tileMap;

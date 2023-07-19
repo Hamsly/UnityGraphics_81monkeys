@@ -12,7 +12,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
     /// <summary>
     /// Class <c>ShadowCaster2D</c> contains properties used for shadow casting
     /// </summary>
-    [ExecuteInEditMode]
     [AddComponentMenu("Rendering/2D/Shadow Tile 2D")]
     public class ShadowTile2D : MonoBehaviour
     {
