@@ -5,7 +5,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
     /// <summary>
     /// Class <c>ShadowCaster2D</c> contains properties used for shadow casting
     /// </summary>
-    [ExecuteInEditMode]
     [DisallowMultipleComponent]
     [AddComponentMenu("Rendering/2D/Shadow Custom Caster 2D")]
     public class ShadowCustomCaster2D : ShadowCaster2D
