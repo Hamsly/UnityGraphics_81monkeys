@@ -32,7 +32,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth-Transparent"
             "RenderPipeline" = "UniversalPipeline"
         }
 
-        Blend SrcAlpha OneMinusSrcAlpha
+        Blend SrcAlpha OneMinusSrcAlpha , One One
         Cull Off
         ZWrite Off
 
