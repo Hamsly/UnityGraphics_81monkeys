@@ -112,11 +112,17 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
+                // Convert to world space
+                o.positionWS = float4(TransformObjectToWorld(a.positionOS),1.0);
 
-                a.positionOS.y += -TransformObjectToWorld(a.positionOS).z;
-                o.positionWS = float4(TransformObjectToWorld(a.positionOS),-a.positionOS.y);
+                // Apply Z depth to Y
+                o.positionWS.y -= o.positionWS.z;
 
-                o.positionCS = TransformObjectToHClip(a.positionOS);
+                // Convert to clipping space
+                o.positionCS = mul(UNITY_MATRIX_VP, o.positionWS);
+
+                o.positionWS.w = -a.positionOS.y;
+
                 o.uv = TRANSFORM_TEX(a.uv, _MainTex);
 
                 o.lightingUV = float2(ComputeScreenPos(o.positionCS).xy);
