@@ -62,7 +62,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth"
                 float2  uv          : TEXCOORD0;
                 half2   lightingUV  : TEXCOORD1;
                 float2  scale       : TEXCOORD2;
-                float4  positionWS  : TEXCOORD3;
+                float3  positionWS  : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -113,15 +113,13 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 // Convert to world space
-                o.positionWS = float4(TransformObjectToWorld(a.positionOS),1.0);
+                o.positionWS = TransformObjectToWorld(a.positionOS);
 
                 // Apply Z depth to Y
                 o.positionWS.y -= o.positionWS.z;
 
                 // Convert to clipping space
-                o.positionCS = mul(UNITY_MATRIX_VP, o.positionWS);
-
-                o.positionWS.w = -a.positionOS.y;
+                o.positionCS = mul(UNITY_MATRIX_VP, float4(o.positionWS, 1.0));
 
                 o.uv = TRANSFORM_TEX(a.uv, _MainTex);
 
