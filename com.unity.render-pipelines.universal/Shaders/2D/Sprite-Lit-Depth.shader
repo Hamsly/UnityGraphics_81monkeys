@@ -147,7 +147,7 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Depth"
 
                 float4 col = lerp(CombinedShapeLightShared(main, mask, i.lightingUV + offset),main,clamp(_LightDodge,0,1));
                 o.color = float4(lerp(col.rgb,_OverlayColor.rgb,_OverlayColor.a),col.a);
-                o.depth = -offset.y;
+                o.depth = (decodedOffset.y + 128) / 2048.0;
 
                 return o;
             }
