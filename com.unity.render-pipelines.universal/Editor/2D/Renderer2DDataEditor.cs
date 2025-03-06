@@ -192,10 +192,10 @@ namespace UnityEditor.Experimental.Rendering.Universal
             DrawPostProcessing();
             DrawShadows();
 
-            DrawRendererFeatureList();
-
             m_WasModified |= serializedObject.hasModifiedProperties;
             serializedObject.ApplyModifiedProperties();
+
+            DrawRendererFeatureList();
         }
 
         private void UpdateEditorList()
