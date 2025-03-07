@@ -44,12 +44,12 @@ namespace UnityEngine.Rendering.Universal
 
     [MovedFrom("UnityEngine.Rendering.LWRP")] public struct CameraData
     {
-        // Internal camera data as we are not yet sure how to expose View in stereo context.
+        // public camera data as we are not yet sure how to expose View in stereo context.
         // We might change this API soon.
         Matrix4x4 m_ViewMatrix;
         Matrix4x4 m_ProjectionMatrix;
 
-        internal void SetViewAndProjectionMatrix(Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
+        public void SetViewAndProjectionMatrix(Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
         {
             m_ViewMatrix = viewMatrix;
             m_ProjectionMatrix = projectionMatrix;
@@ -83,7 +83,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Returns the camera GPU projection matrix. This contains platform specific changes to handle y-flip and reverse z.
-        /// Similar to <c>GL.GetGPUProjectionMatrix</c> but queries URP internal state to know if the pipeline is rendering to render texture.
+        /// Similar to <c>GL.GetGPUProjectionMatrix</c> but queries URP public state to know if the pipeline is rendering to render texture.
         /// For more info on platform differences regarding camera projection check: https://docs.unity3d.com/Manual/SL-PlatformDifferences.html
         /// </summary>
         /// <seealso cref="GL.GetGPUProjectionMatrix(Matrix4x4, bool)"/>
@@ -97,10 +97,10 @@ namespace UnityEngine.Rendering.Universal
         public CameraRenderType renderType;
         public RenderTexture targetTexture;
         public RenderTextureDescriptor cameraTargetDescriptor;
-        internal Rect pixelRect;
-        internal int pixelWidth;
-        internal int pixelHeight;
-        internal float aspectRatio;
+        public Rect pixelRect;
+        public int pixelWidth;
+        public int pixelHeight;
+        public float aspectRatio;
         public float renderScale;
         public bool clearDepth;
         public CameraType cameraType;
@@ -111,7 +111,7 @@ namespace UnityEngine.Rendering.Universal
 #if ENABLE_VR && ENABLE_XR_MODULE
         public bool xrRendering;
 #endif
-        internal bool requireSrgbConversion
+        public bool requireSrgbConversion
         {
             get
             {
@@ -162,7 +162,7 @@ namespace UnityEngine.Rendering.Universal
 
         public SortingCriteria defaultOpaqueSortFlags;
 
-        internal XRPass xr;
+        public XRPass xr;
 
         [Obsolete("Please use xr.enabled instead.")]
         public bool isStereoEnabled;
@@ -244,7 +244,7 @@ namespace UnityEngine.Rendering.Universal
         public Vector4 occlusionProbeInfo;
     }
 
-    internal static class ShaderPropertyId
+    public static class ShaderPropertyId
     {
         public static readonly int glossyEnvironmentColor = Shader.PropertyToID("_GlossyEnvironmentColor");
         public static readonly int subtractiveShadowColor = Shader.PropertyToID("_SubtractiveShadowColor");
@@ -317,7 +317,7 @@ namespace UnityEngine.Rendering.Universal
         public static readonly string DepthMsaa8 = "_DEPTH_MSAA_8";
 
         public static readonly string LinearToSRGBConversion = "_LINEAR_TO_SRGB_CONVERSION";
-        internal static readonly string UseFastSRGBLinearConversion = "_USE_FAST_SRGB_LINEAR_CONVERSION";
+        public static readonly string UseFastSRGBLinearConversion = "_USE_FAST_SRGB_LINEAR_CONVERSION";
 
         public static readonly string SmaaLow = "_SMAA_PRESET_LOW";
         public static readonly string SmaaMedium = "_SMAA_PRESET_MEDIUM";
@@ -446,7 +446,7 @@ namespace UnityEngine.Rendering.Universal
         // with custom render pass.
         // TODO: Remove this method and usages when we have proper dependency tracking in the pipeline to know
         // when a render pass requires camera color as input.
-        internal static bool IsRunningHololens(CameraData cameraData)
+        public static bool IsRunningHololens(CameraData cameraData)
         {
 #if PLATFORM_WINRT
             if (cameraData.xr.enabled)
@@ -712,7 +712,7 @@ namespace UnityEngine.Rendering.Universal
         }
     }
 
-    internal enum URPProfileId
+    public enum URPProfileId
     {
         // CPU
         UniversalRenderTotal,
