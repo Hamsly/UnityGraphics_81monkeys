@@ -240,6 +240,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
                         */
                     }
                 }
+
+                CopyCameraSortingLayerRenderTexture(context, renderingData);
             }
 
             for (var i = startIndex; i < startIndex + batchesDrawn; ++i)
