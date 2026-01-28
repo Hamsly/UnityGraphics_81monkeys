@@ -81,7 +81,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             var cmd = CommandBufferPool.Get();
             cmd.Clear();
-            this.CreateCameraSortingLayerRenderTexture(renderingData, cmd, m_Renderer2DData.cameraSortingLayerDownsamplingMethod);
+            //this.CreateCameraSortingLayerRenderTexture(renderingData, cmd, m_Renderer2DData.cameraSortingLayerDownsamplingMethod);
 
             Material copyMaterial = m_Renderer2DData.cameraSortingLayerDownsamplingMethod == Downsampling._4xBox ? m_SamplingMaterial : m_BlitMaterial;
             RenderingUtils.Blit(cmd, colorAttachment, m_Renderer2DData.cameraSortingLayerRenderTarget.id, copyMaterial, 0, false, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
@@ -170,6 +170,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
             using (new ProfilingScope(cmd, m_ProfilingDrawRenderers))
             {
                 cmd.SetRenderTarget(colorAttachment, depthAttachment);
+
+                var cameraSortingLayerCMD = CommandBufferPool.Get();
+                cameraSortingLayerCMD.Clear();
+                this.CreateCameraSortingLayerRenderTexture(renderingData, cmd, m_Renderer2DData.cameraSortingLayerDownsamplingMethod);
+                context.ExecuteCommandBuffer(cameraSortingLayerCMD);
+                CommandBufferPool.Release(cameraSortingLayerCMD);
 
                 for (var i = startIndex; i < startIndex + batchesDrawn; i++)
                 {
