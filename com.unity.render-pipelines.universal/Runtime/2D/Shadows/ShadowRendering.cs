@@ -123,7 +123,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         public static void RenderShadows(IRenderPass2D pass, RenderingData renderingData, CommandBuffer cmdBuffer, int layerToRender, Light2D light, float shadowIntensity, RenderTargetIdentifier renderTexture)
         {
             // Blur Set up
-             /*
+
 
             RenderTargetIdentifier workingTexture = new RenderTargetIdentifier();
             workingTexture = m_WorkingTexture.id;
@@ -138,11 +138,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
                RenderBufferStoreAction.DontCare);
             cmdBuffer.ClearRenderTarget(true, true, Color.black); // clear stencil
             var blurMaterial = pass.rendererData.GetPostRenderShadowMaterial();
-            */
 
 
-            cmdBuffer.SetRenderTarget(renderTexture, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
-            cmdBuffer.ClearRenderTarget(true, true, Color.black);  // clear stencil
+
+            //cmdBuffer.SetRenderTarget(renderTexture, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
+            //cmdBuffer.ClearRenderTarget(true, true, Color.black);  // clear stencil
 
             var p = light.transform.position;
             var lightPosition = new Vector4(p.x,p.y,-p.z,0);
@@ -219,7 +219,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 silhouette.ExcludeSilhouettes(cmdBuffer,layerToRender,mat,incrementingGroupIndex);
             }
 
-            /*
+
              //Blur Final Render
             var width = (int)(renderingData.cameraData.cameraTargetDescriptor.width);
             var height = (int)(renderingData.cameraData.cameraTargetDescriptor.height);
@@ -228,7 +228,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
             cmdBuffer.SetGlobalFloat(k_BlurStrength, 2);
             cmdBuffer.Blit(workingTexture, renderTexture, blurMaterial, -1);
             cmdBuffer.ReleaseTemporaryRT(m_WorkingTexture.id);
-            */
+
 
         }
     }
