@@ -5,8 +5,33 @@ half _HDREmulationScale;
 half _UseSceneLighting;
 half4 _RendererColor;
 
+half GetLuminance(half4 color)
+{
+    return 0.2126*color.r + 0.7152*color.g + 0.0722*color.b;
+}
+
+half3 HSVToRGB(half3 c)
+{
+    half4 K = half4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    half3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+half3 RGBToHSV(half3 c)
+{
+    half4 K = half4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    half4 p = lerp(half4(c.bg, K.wz), half4(c.gb, K.xy), step(c.b, c.g));
+    half4 q = lerp(half4(p.xyw, c.r), half4(c.r, p.yzx), step(p.x, c.r));
+
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return half3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+
 half4 CombinedShapeLightShared(half4 color, half4 mask, half2 lightingUV)
 {
+    half4 inputColor = color;
     if (color.a == 0.0)
         discard;
 
@@ -79,15 +104,44 @@ half4 CombinedShapeLightShared(half4 color, half4 mask, half2 lightingUV)
     half4 finalOutput;
 #if !USE_SHAPE_LIGHT_TYPE_0 && !USE_SHAPE_LIGHT_TYPE_1 && !USE_SHAPE_LIGHT_TYPE_2 && ! USE_SHAPE_LIGHT_TYPE_3
     finalOutput = color;
+    half4 finalModulate = half4(0,0,0,0);
+    half4 finalAdditve = half4(0,0,0,0);
 #else
     half4 finalModulate = shapeLight0Modulate + shapeLight1Modulate + shapeLight2Modulate + shapeLight3Modulate;
     half4 finalAdditve = shapeLight0Additive + shapeLight1Additive + shapeLight2Additive + shapeLight3Additive;
     finalOutput = _HDREmulationScale * (color * finalModulate + finalAdditve);
 #endif
-
-    finalOutput.a = color.a;
-
+    
     finalOutput = finalOutput *_UseSceneLighting + (1 - _UseSceneLighting)*color;
+
+    half a = 0;
+    half baseLum = GetLuminance(inputColor);
+    half finalLum = GetLuminance(finalOutput);
+    
+    half4 lightColor = finalModulate + finalAdditve;
+    half lightLum = GetLuminance(lightColor);
+    
+    //a = max(min(((1 - lightLum) - 0.65) * 4,1.0),0.0);
+    //if (a > 0)
+    //{
+    //    half3 lightHsv = RGBToHSV(lightColor.rgb);
+    //    half3 baseHsv = RGBToHSV(finalOutput.rgb);
+    //    half3 shadowHsv = half3(lightHsv.xy, baseHsv.z);
+    //    half3 shadowColor = HSVToRGB(shadowHsv);
+    //    finalOutput.rgb = lerp(finalOutput.rgb,shadowColor,Smoothstep01(a));
+    //}
+    
+    if (baseLum > finalLum)
+    {
+        finalOutput.a = color.a;
+        return max(0, finalOutput);
+    }
+
+    a = min((finalLum - baseLum) * 1.1,0.5);
+    finalOutput = finalOutput + ((inputColor - finalOutput) * a);
+    finalOutput.a = color.a;
     return max(0, finalOutput);
+    
 }
 #endif
+
