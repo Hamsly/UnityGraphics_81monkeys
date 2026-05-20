@@ -53,34 +53,41 @@ Shader "Hidden/Universal Render Pipeline/ShadowPostRender"
             HLSLPROGRAM
             half4 frag(Varyings IN) : SV_TARGET
             {
-                half4 sumH = 0;
-                half4 sumV = 0;
+                half4 sum = 0;
 
-                #define GRABPIXELH(weight,kernel) SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, float2(IN.uv.x + kernel * _MainTex_TexelSize.x, IN.uv.y)) * weight
+                #define GRABPIXEL(weight,kernelX,kernelY) SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + (_MainTex_TexelSize.xy * float2(kernelX,kernelY) )) * weight
+    
+                sum += GRABPIXEL( 1, -2.0,-2.0);
+                sum += GRABPIXEL( 4, -1.0,-2.0);
+                sum += GRABPIXEL( 6,  0.0,-2.0);
+                sum += GRABPIXEL( 4, +1.0,-2.0);
+                sum += GRABPIXEL( 1, +2.0,-2.0);
 
-                sumH += GRABPIXELH(0.05, -4.0);
-                sumH += GRABPIXELH(0.09, -3.0);
-                sumH += GRABPIXELH(0.12, -2.0);
-                sumH += GRABPIXELH(0.15, -1.0);
-                sumH += GRABPIXELH(0.18,  0.0);
-                sumH += GRABPIXELH(0.15, +1.0);
-                sumH += GRABPIXELH(0.12, +2.0);
-                sumH += GRABPIXELH(0.09, +3.0);
-                sumH += GRABPIXELH(0.05, +4.0);
+                sum += GRABPIXEL( 4, -2.0,-1.0);
+                sum += GRABPIXEL(16, -1.0,-1.0);
+                sum += GRABPIXEL(24,  0.0,-1.0);
+                sum += GRABPIXEL(16, +1.0,-1.0);
+                sum += GRABPIXEL( 4, +2.0,-1.0);
 
-                #define GRABPIXELV(weight,kernel) SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, float2(IN.uv.x, IN.uv.y + kernel * _MainTex_TexelSize.y)) * weight
+                sum += GRABPIXEL( 6, -2.0, 0.0);
+                sum += GRABPIXEL(24, -1.0, 0.0);
+                sum += GRABPIXEL(32,  0.0, 0.0);
+                sum += GRABPIXEL(24, +1.0, 0.0);
+                sum += GRABPIXEL( 6, +2.0, 0.0);
 
-                sumV += GRABPIXELV(0.05, -4.0);
-                sumV += GRABPIXELV(0.09, -3.0);
-                sumV += GRABPIXELV(0.12, -2.0);
-                sumV += GRABPIXELV(0.15, -1.0);
-                sumV += GRABPIXELV(0.18,  0.0);
-                sumV += GRABPIXELV(0.15, +1.0);
-                sumV += GRABPIXELV(0.12, +2.0);
-                sumV += GRABPIXELV(0.09, +3.0);
-                sumV += GRABPIXELV(0.05, +4.0);
+                sum += GRABPIXEL( 4, -2.0,+1.0);
+                sum += GRABPIXEL(16, -1.0,+1.0);
+                sum += GRABPIXEL(24,  0.0,+1.0);
+                sum += GRABPIXEL(16, +1.0,+1.0);
+                sum += GRABPIXEL( 4, +2.0,+1.0);
 
-                return (sumH + sumV) / 2;
+                sum += GRABPIXEL( 1, -2.0,+2.0);
+                sum += GRABPIXEL( 4, -1.0,+2.0);
+                sum += GRABPIXEL( 6,  0.0,+2.0);
+                sum += GRABPIXEL( 4, +1.0,+2.0);
+                sum += GRABPIXEL( 1, +2.0,+2.0);
+                
+                return sum / 256.0;
             }
             ENDHLSL
         }
