@@ -94,7 +94,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     break;
             }
 
-            m_Bounds = new Rect(-rr, -rr, rr * 2, rr * 2);
+            Bounds = new Rect(-rr, -rr, rr * 2, rr * 2);
         }
 
         private void GenerateStandingSpriteMesh( ref Mesh mesh)

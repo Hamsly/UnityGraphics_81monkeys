@@ -147,7 +147,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 maxY = Mathf.Max(pp.y, maxY);
             }
 
-            m_Bounds = new Rect(new Vector2(minX,minY), new Vector2(maxX - minX, maxY - minY));
+            Bounds = new Rect(new Vector2(minX,minY), new Vector2(maxX - minX, maxY - minY));
         }
 
         private void OnDrawGizmosSelected()

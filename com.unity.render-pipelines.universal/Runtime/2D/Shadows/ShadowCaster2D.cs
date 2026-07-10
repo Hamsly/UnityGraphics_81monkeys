@@ -48,25 +48,28 @@ namespace UnityEngine.Experimental.Rendering.Universal
         protected Rect m_Bounds;
 
         protected float radius = 0;
+
+        private Transform _cachedTransform;
+        private Rect _cachedBounds;
+
         public Rect Bounds
         {
             get
             {
-                if (Transform == null) return default;
-                var p = Transform.position;
-                return new Rect(m_Bounds.x + p.x,m_Bounds.y + p.y,m_Bounds.width,m_Bounds.height);
+                return _cachedBounds;
             }
 
             set
             {
                 m_Bounds = value;
+                UpdateCachedBounds();
             }
         }
 
         public float ZPosition
         {
             set => m_ZPosition = value;
-            get => m_UseTransformZ ? -Transform.position.z : m_ZPosition;
+            get => m_UseTransformZ ? -_cachedTransform.position.z : m_ZPosition;
         }
 
         int m_PreviousShadowGroup = 0;
@@ -113,7 +116,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             get
             {
-                var pos = Transform.position;
+                var pos = _cachedTransform.position;
                 return new Vector3(pos.x, pos.y, ZPosition);
             }
         }
@@ -126,7 +129,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         internal bool IsShadowedLayer(int layer)
         {
-            return m_ApplyToSortingLayers != null ? Array.IndexOf(m_ApplyToSortingLayers, layer) >= 0 : false;
+            for (int i = 0; i < m_ApplyToSortingLayers.Length; ++i)
+            {
+                if (m_ApplyToSortingLayers[i] == layer) return true;
+            }
+            return false;
         }
 
         static int[] SetDefaultSortingLayers()
@@ -136,6 +143,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         protected new void Awake()
         {
+            _cachedTransform = this.transform;
+
             base.Awake();
 
             ForceUpdate();
@@ -255,6 +264,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 else
                     ShadowCasterGroup2DManager.RemoveGroup(this);
             }
+        }
+
+        protected virtual void LateUpdate()
+        {
+            if (isStatic) return;
+            UpdateCachedBounds();
+        }
+
+        private void UpdateCachedBounds()
+        {
+            if (_cachedTransform == null) return;
+            var p = _cachedTransform.position;
+            _cachedBounds = new Rect(m_Bounds.x + p.x, m_Bounds.y + p.y, m_Bounds.width, m_Bounds.height);
         }
 
         public virtual void CastShadows(CommandBuffer cmdBuffer,int layerToRender,Light2D light,Material material, int groupIndex)
