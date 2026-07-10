@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         [SerializeField] float m_Direction = 0f;
         [SerializeField] Vector2 m_Size = Vector2.one;
-        [SerializeField] Mesh m_Mesh;
+        Mesh m_Mesh;
         [SerializeField] Texture2D m_Texture;
         [SerializeField] SpriteCasterType m_SpriteCasterType;
         [SerializeField] private bool m_ReorientPerLight;
@@ -78,6 +78,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     RecalculateBounds();
                     break;
             }
+
+            directionPrev = m_Direction;
+            sizePrev = size;
+            spriteCasterTypePrev = m_SpriteCasterType;
+            reorientPerLightPrev = m_ReorientPerLight;
         }
 
         private void RecalculateBounds()
@@ -158,6 +163,16 @@ namespace UnityEngine.Experimental.Rendering.Universal
             mesh.triangles = triangles;
         }
 
+        protected new void Start()
+        {
+            if (m_SpriteCasterType == SpriteCasterType.Flat)
+            {
+                m_Mesh = new Mesh();
+            }
+
+            GenerateMesh(m_Size, m_Direction * Mathf.Deg2Rad, ref m_Mesh);
+            base.Start();
+        }
 
         public new void Update()
         {
@@ -186,11 +201,6 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             if (rebuildMesh)
             {
-                if (m_Mesh == null)
-                {
-                    m_Mesh = new Mesh();
-                }
-
                 GenerateMesh(m_Size, m_Direction * Mathf.Deg2Rad, ref m_Mesh);
             }
 
