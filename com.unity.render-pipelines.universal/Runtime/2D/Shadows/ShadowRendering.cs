@@ -151,6 +151,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
             var lightRange = light.pointLightOuterRadius;
             var r = lightRange * 2;
             var lightRect = new Rect(lightPosition.x - lightRange, lightPosition.y - lightRange, r, r);
+            float lightXMin = lightPosition.x - lightRange;
+            float lightYMin = lightPosition.y - lightRange;
+            float lightXMax = lightXMin + r;
+            float lightYMax = lightYMin + r;
 
             var incrementingGroupIndex = 0;
             var previousShadowGroupIndex = -1;
@@ -173,7 +177,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                         continue;
                 }
 
-                if (!lightRect.Overlaps(shadowCaster.Bounds))
+                if (!shadowCaster.Overlaps(lightXMin, lightYMin, lightXMax, lightYMax))
                 {
                     continue;
                 }

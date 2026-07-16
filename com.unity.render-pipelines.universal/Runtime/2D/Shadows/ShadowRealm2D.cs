@@ -67,10 +67,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             public bool IsValid(ShadowCaster2D obj) => obj != null;
             public Rect GetRect(ShadowCaster2D obj) => obj.Bounds;
-            public float GetTop(ShadowCaster2D obj) => obj.Bounds.yMax;
-            public float GetBottom(ShadowCaster2D obj) => obj.Bounds.yMin;
-            public float GetLeft(ShadowCaster2D obj) => obj.Bounds.xMin;
-            public float GetRight(ShadowCaster2D obj) => obj.Bounds.xMax;
+            public float GetTop(ShadowCaster2D obj) => obj.YMax;
+            public float GetBottom(ShadowCaster2D obj) => obj.YMin;
+            public float GetLeft(ShadowCaster2D obj) => obj.XMin;
+            public float GetRight(ShadowCaster2D obj) => obj.XMax;
         }
 
         public void InitShadow2DWorld(Rect rect)

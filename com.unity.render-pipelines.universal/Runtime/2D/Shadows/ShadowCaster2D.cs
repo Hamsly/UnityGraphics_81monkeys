@@ -52,6 +52,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private Transform _cachedTransform;
         private Rect _cachedBounds;
 
+        public float XMin;
+        public float YMin;
+        public float XMax;
+        public float YMax;
+
         public Rect Bounds
         {
             get
@@ -276,7 +281,17 @@ namespace UnityEngine.Experimental.Rendering.Universal
         {
             if (_cachedTransform == null) return;
             var p = _cachedTransform.position;
-            _cachedBounds = new Rect(m_Bounds.x + p.x, m_Bounds.y + p.y, m_Bounds.width, m_Bounds.height);
+
+            this.XMin = m_Bounds.x + p.x;
+            this.YMin = m_Bounds.y + p.y;
+            this.XMax = XMin + m_Bounds.width;
+            this.YMax = YMin + m_Bounds.height;
+            this._cachedBounds = new Rect(this.XMin, this.YMin, m_Bounds.width, m_Bounds.height);
+        }
+
+        public bool Overlaps(float otherXMin, float otherYMin, float otherXMax, float otherYMax)
+        {
+            return otherXMax > this.XMin && otherXMin < this.XMax && otherYMax > this.YMin && otherYMin < this.YMax;
         }
 
         public virtual void CastShadows(CommandBuffer cmdBuffer,int layerToRender,Light2D light,Material material, int groupIndex)
