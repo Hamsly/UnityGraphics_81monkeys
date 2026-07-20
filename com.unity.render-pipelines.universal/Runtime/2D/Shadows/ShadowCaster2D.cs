@@ -52,10 +52,10 @@ namespace UnityEngine.Experimental.Rendering.Universal
         private Transform _cachedTransform;
         private Rect _cachedBounds;
 
-        public float XMin;
-        public float YMin;
-        public float XMax;
-        public float YMax;
+        [NonSerialized] public float XMin;
+        [NonSerialized] public float YMin;
+        [NonSerialized] public float XMax;
+        [NonSerialized] public float YMax;
 
         public Rect Bounds
         {
