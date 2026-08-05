@@ -21,5 +21,5 @@ float2 DecodeOffset(float4 color)
     xx += (g & 0xF) * 256 * sign(xx);
     yy += (g >> 4 & 0xF) * 256 * sign(yy);
 
-    return float2(xx,yy);
+    return float2(round(xx),round(yy));
 }
